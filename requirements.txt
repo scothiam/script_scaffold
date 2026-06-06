@@ -1,0 +1,10 @@
+# Core runtime dependency used by the ORM and repositories
+SQLAlchemy>=2.0
+
+# Optional: RSS/Atom crawling support
+feedparser>=6.0
+
+# Optional: search integrations
+openai>=1.0
+tavily-python>=0.3
+duckduckgo-search>=5.0
