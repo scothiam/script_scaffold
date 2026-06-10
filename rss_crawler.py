@@ -47,12 +47,17 @@ def _entry_summary(entry: dict) -> str:
     return ""
 
 
-def crawl_rss(source: Source, session) -> tuple[int, int]:
+def crawl_rss(source: Source, session, item_cls=None) -> tuple[int, int]:
     """Fetch one RSS/Atom feed and upsert items into the session.
 
     Returns (new_count, updated_count). Marks source.last_crawled_at on success.
     Marks source.is_active=False on persistent HTTP errors.
+
+    item_cls: SourceItem subclass to use when creating/querying rows. Defaults to SourceItem.
     """
+    if item_cls is None:
+        item_cls = SourceItem
+
     try:
         import feedparser
     except ImportError:
@@ -91,7 +96,7 @@ def crawl_rss(source: Source, session) -> tuple[int, int]:
             (title + summary).encode("utf-8", errors="replace")
         ).hexdigest()
 
-        existing = session.query(SourceItem).filter_by(item_url=url).first()
+        existing = session.query(item_cls).filter_by(item_url=url).first()
         if existing:
             if existing.content_hash != content_hash:
                 existing.title = title
@@ -104,7 +109,7 @@ def crawl_rss(source: Source, session) -> tuple[int, int]:
             else:
                 existing.fetched_at = utcnow()
         else:
-            session.add(SourceItem(
+            session.add(item_cls(
                 source_id=source.id,
                 item_url=url,
                 title=title,
@@ -120,24 +125,32 @@ def crawl_rss(source: Source, session) -> tuple[int, int]:
     return new_count, updated_count
 
 
-def crawl_sources(sources: list[Source], get_session: Callable) -> dict:
+def crawl_sources(sources: list[Source], get_session: Callable, source_cls=None, item_cls=None) -> dict:
     """Crawl a list of sources and return a summary.
 
     Each source is crawled in its own session so one failure doesn't
     roll back the rest.
 
+    source_cls: Source subclass to use when re-fetching rows. Defaults to Source.
+    item_cls: SourceItem subclass to use when inserting/querying rows. Defaults to SourceItem.
+
     Returns: {sources_crawled, new_items, updated_items, errors}
     """
+    if source_cls is None:
+        source_cls = Source
+    if item_cls is None:
+        item_cls = SourceItem
+
     total_new = total_updated = errors = 0
 
     for source in sources:
         if source.fetch_method == "rss":
             try:
                 with get_session() as session:
-                    src = session.get(Source, source.id)
+                    src = session.get(source_cls, source.id)
                     if src is None:
                         continue
-                    new_ct, upd_ct = crawl_rss(src, session)
+                    new_ct, upd_ct = crawl_rss(src, session, item_cls=item_cls)
                 total_new += new_ct
                 total_updated += upd_ct
                 if new_ct or upd_ct:
