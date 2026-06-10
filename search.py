@@ -5,6 +5,7 @@ logger = logging.getLogger(__name__)
 
 _tavily_disabled = False
 _openai_disabled = False
+_anthropic_disabled = False
 
 
 def tavily_search(query: str, max_results: int = 5, days: int = 30) -> list[dict]:
@@ -62,6 +63,47 @@ def openai_chat(
             logger.warning("OpenAI disabled for this run: %s", exc)
         else:
             logger.warning("OpenAI chat failed: %s", exc)
+        return None
+
+
+def anthropic_chat(
+    prompt: str,
+    model: str = "claude-haiku-4-5-20251001",
+    json_mode: bool = False,
+    temperature: float = 0,
+    max_tokens: int = 1024,
+) -> str | None:
+    """Send a single-turn prompt to Anthropic. Returns the reply text, or None on failure.
+
+    Returns None (gracefully) when ANTHROPIC_API_KEY is unset or after a permanent
+    error, so callers can degrade gracefully without crashing.
+
+    When json_mode=True a system prompt is added instructing the model to respond
+    with valid JSON only (Anthropic has no native JSON-mode parameter).
+    """
+    global _anthropic_disabled
+    if _anthropic_disabled or not os.getenv("ANTHROPIC_API_KEY"):
+        return None
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        kwargs: dict = {
+            "model": model,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "messages": [{"role": "user", "content": prompt}],
+        }
+        if json_mode:
+            kwargs["system"] = "Respond with valid JSON only. Do not include any other text."
+        response = client.messages.create(**kwargs)
+        return response.content[0].text
+    except Exception as exc:
+        msg = str(exc).lower()
+        if any(kw in msg for kw in ("authentication_error", "invalid_api_key", "credit balance", "permission_error")):
+            _anthropic_disabled = True
+            logger.warning("Anthropic disabled for this run: %s", exc)
+        else:
+            logger.warning("Anthropic chat failed: %s", exc)
         return None
 
 

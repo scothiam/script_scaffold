@@ -12,11 +12,15 @@ pip install -r requirements.txt
 |---|---|---|
 | `SQLAlchemy>=2.0` | Yes | ORM and database sessions |
 | `feedparser>=6.0` | For RSS crawling | Parses RSS/Atom feeds |
-| `openai>=1.0` | For AI calls | `openai_chat()` in `search.py` |
+| `openai>=1.0` | For OpenAI calls | `openai_chat()` in `search.py` |
+| `anthropic>=0.25` | For Anthropic calls | `anthropic_chat()` in `search.py` |
 | `tavily-python>=0.3` | For Tavily search | `tavily_search()` in `search.py` |
 | `duckduckgo-search>=5.0` | For DDG search | `ddg_search()` in `search.py` |
+| `langchain-openai>=0.1` | For LangChain + OpenAI | `get_llm()` in `llm.py` |
+| `langchain-anthropic>=0.1` | For LangChain + Anthropic | `get_llm()` in `llm.py` |
+| `langchain-ollama>=0.1` | For LangChain + Ollama | `get_llm()` in `llm.py` |
 
-Optional integrations degrade gracefully — if a package is not installed or an API key is unset, the relevant function returns an empty result or `None` instead of raising.
+Optional integrations degrade gracefully — if a package is not installed or an API key is unset, the relevant function returns an empty result or `None` instead of raising. For `llm.py`, a missing LangChain package raises `SystemExit` with an install hint rather than silently failing, since structured-output pipelines cannot continue without the provider.
 
 ---
 
@@ -221,11 +225,127 @@ reply = openai_chat("Summarise this in one sentence: ...", model="gpt-4o-mini")
 json_reply = openai_chat(prompt, json_mode=True)  # sets response_format=json_object
 ```
 
+#### Anthropic (requires `ANTHROPIC_API_KEY`)
+
+```python
+from script_scaffold.search import anthropic_chat
+
+reply = anthropic_chat("Summarise this in one sentence: ...")
+# Returns None if ANTHROPIC_API_KEY is unset or the call fails
+
+json_reply = anthropic_chat(prompt, json_mode=True)  # adds a JSON-only system prompt
+```
+
 Set keys in the environment or a `.env` file (loaded by `python-dotenv` in your app):
 
 ```
 TAVILY_API_KEY=tvly-...
 OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+---
+
+### `llm.py` — LangChain provider factory
+
+For pipelines that need structured outputs via `llm.with_structured_output(Schema)`. Supports OpenAI, Anthropic, and Ollama with a single `LLM_PROVIDER` env var switch.
+
+```python
+from script_scaffold.llm import get_llm, check_credentials, apply_options, describe
+
+# Validate credentials before starting a long pipeline
+check_credentials()
+
+# Get a LangChain chat model
+llm = get_llm(temperature=0.1)
+
+# Structured output
+from pydantic import BaseModel
+class MySchema(BaseModel):
+    sentiment: str
+    confidence: float
+
+result = llm.with_structured_output(MySchema).invoke("Analyse: ...")
+
+# Apply CLI flags before any LLM call
+apply_options(provider="anthropic", model="claude-sonnet-4-6")
+
+# Show active config in logs
+print(describe())  # "anthropic  model=claude-sonnet-4-6"
+```
+
+**Environment variables:**
+
+| Variable | Purpose |
+|---|---|
+| `LLM_PROVIDER` | `openai` (default) \| `anthropic` \| `ollama` |
+| `LLM_MODEL` | Override model for any provider |
+| `OPENAI_MODEL` | OpenAI model (default: `gpt-4o-mini`) |
+| `ANTHROPIC_MODEL` | Anthropic model (default: `claude-haiku-4-5-20251001`) |
+| `OLLAMA_MODEL` | Ollama model (default: `qwen3:14b`) |
+| `OLLAMA_BASE_URL` | Ollama server URL (default: `http://localhost:11434`) |
+
+---
+
+### `db.py` — Database setup (updated)
+
+`seed_from_list` is now available alongside the existing engine/session helpers:
+
+```python
+from script_scaffold.db import seed_from_list
+
+# Idempotent seeding — inserts only rows that don't already exist
+count = seed_from_list(
+    get_session,
+    Source,
+    SEEDED_SOURCES,          # list of dicts
+    match_on=["url", "scope"],
+)
+```
+
+For API-style entries with no URL, match on a combination of non-nullable fields:
+
+```python
+seed_from_list(get_session, Source, API_SOURCES, match_on=["domain", "scope", "fetch_method"])
+```
+
+---
+
+### `models.py` — ORM base and mixins (updated)
+
+Two new mixins for analysis-pipeline tables are now available:
+
+```python
+from script_scaffold.models import Base, AnalysisMixin, ScorecardAnalysisMixin
+from sqlalchemy.orm import declared_attr
+from sqlalchemy import ForeignKey, Integer, String
+```
+
+**`AnalysisMixin`** — Adds `id`, `analysis_date`, and `created_at` to any periodic analysis result table. The entity FK must be defined by the concrete class (one instance per table is required by SQLAlchemy):
+
+```python
+class StockAnalysis(Base, AnalysisMixin):
+    __tablename__ = "stock_analysis"
+
+    @declared_attr
+    def stock_id(cls) -> Mapped[int]:
+        return mapped_column(Integer, ForeignKey("stocks.id"), nullable=False)
+
+    sentiment: Mapped[str] = mapped_column(String(10))
+```
+
+**`ScorecardAnalysisMixin`** — Extends `AnalysisMixin` with `overall_score` (Float), `rationale_json` (Text), and `raw_llm_response` (Text). Use when a pipeline produces a single aggregate numeric score with a JSON rationale:
+
+```python
+class MiningScorecard(Base, ScorecardAnalysisMixin):
+    __tablename__ = "mining_scorecard"
+
+    @declared_attr
+    def stock_id(cls) -> Mapped[int]:
+        return mapped_column(Integer, ForeignKey("stocks.id"), nullable=False)
+
+    resource_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    management_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
 ```
 
 ---
