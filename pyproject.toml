@@ -28,6 +28,8 @@ llm = [
 ]
 all = ["script-scaffold[rss,search,llm]"]
 
-[tool.setuptools.packages.find]
-where = [".."]
-include = ["script_scaffold"]
+[tool.setuptools]
+packages = ["script_scaffold"]
+
+[tool.setuptools.package-dir]
+"script_scaffold" = "."
