@@ -8,27 +8,100 @@ _openai_disabled = False
 _anthropic_disabled = False
 
 
+class BaseSearch:
+    """Abstract base for all web/API search implementations.
+
+    Subclass and implement search(). The normalised result contract is a list
+    of dicts with at minimum {title, url, content}.
+
+    Example::
+
+        class MySearch(BaseSearch):
+            def search(self, query, max_results=5, days=None):
+                ...
+                return [{"title": ..., "url": ..., "content": ...}]
+    """
+
+    def search(self, query: str, max_results: int = 5, days: int | None = None) -> list[dict]:
+        """Execute a search and return normalised {title, url, content} dicts."""
+        raise NotImplementedError
+
+
+class DdgSearch(BaseSearch):
+    """DuckDuckGo text search. No API key required."""
+
+    def search(self, query: str, max_results: int = 5, days: int | None = None) -> list[dict]:
+        timelimit: str | None = None
+        if days is not None:
+            if days <= 1:
+                timelimit = "d"
+            elif days <= 7:
+                timelimit = "w"
+            elif days <= 31:
+                timelimit = "m"
+        try:
+            from ddgs import DDGS
+            results = DDGS().text(query, max_results=max_results, timelimit=timelimit)
+            return [
+                {"title": r.get("title", ""), "url": r.get("href", ""), "content": r.get("body", "")}
+                for r in (results or [])
+            ]
+        except Exception as exc:
+            logger.warning("DuckDuckGo search failed for %r: %s", query, exc)
+            return []
+
+
+class TavilySearch(BaseSearch):
+    """Tavily web search. Requires TAVILY_API_KEY.
+
+    Automatically disables itself for the process lifetime when the usage
+    limit is hit, so callers degrade gracefully without crashing.
+    """
+
+    def search(self, query: str, max_results: int = 5, days: int | None = None) -> list[dict]:
+        global _tavily_disabled
+        if _tavily_disabled or not os.getenv("TAVILY_API_KEY"):
+            return []
+        try:
+            from tavily import TavilyClient
+            client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
+            kwargs: dict = {"max_results": max_results}
+            if days is not None:
+                kwargs["days"] = days
+            return client.search(query, **kwargs).get("results", [])
+        except Exception as exc:
+            msg = str(exc).lower()
+            if any(kw in msg for kw in ("usage limit", "upgrade your plan", "plan's set")):
+                _tavily_disabled = True
+                logger.warning("Tavily usage limit reached — disabling for this run")
+            else:
+                logger.warning("Tavily search failed for %r: %s", query, exc)
+            return []
+
+
+# ---------------------------------------------------------------------------
+# Backward-compatible module-level functions
+# ---------------------------------------------------------------------------
+
+def ddg_search(query: str, max_results: int = 5, days: int | None = None) -> list[dict]:
+    """Run a DuckDuckGo search. No API key required.
+
+    Results normalised to {title, url, content}.
+    """
+    return DdgSearch().search(query, max_results=max_results, days=days)
+
+
 def tavily_search(query: str, max_results: int = 5, days: int = 30) -> list[dict]:
     """Run a Tavily search. Returns [] when key is unset, limit hit, or on error.
 
     Results normalised to {title, url, content}.
     """
-    global _tavily_disabled
-    if _tavily_disabled or not os.getenv("TAVILY_API_KEY"):
-        return []
-    try:
-        from tavily import TavilyClient
-        client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
-        return client.search(query, max_results=max_results, days=days).get("results", [])
-    except Exception as exc:
-        msg = str(exc).lower()
-        if any(kw in msg for kw in ("usage limit", "upgrade your plan", "plan's set")):
-            _tavily_disabled = True
-            logger.warning("Tavily usage limit reached — disabling for this run")
-        else:
-            logger.warning("Tavily search failed for %r: %s", query, exc)
-        return []
+    return TavilySearch().search(query, max_results=max_results, days=days)
 
+
+# ---------------------------------------------------------------------------
+# LLM helpers — single-turn chat, not web search
+# ---------------------------------------------------------------------------
 
 def openai_chat(
     prompt: str,
@@ -105,28 +178,3 @@ def anthropic_chat(
         else:
             logger.warning("Anthropic chat failed: %s", exc)
         return None
-
-
-def ddg_search(query: str, max_results: int = 5, days: int | None = None) -> list[dict]:
-    """Run a DuckDuckGo search. No API key required.
-
-    Results normalised to {title, url, content}.
-    """
-    timelimit: str | None = None
-    if days is not None:
-        if days <= 1:
-            timelimit = "d"
-        elif days <= 7:
-            timelimit = "w"
-        elif days <= 31:
-            timelimit = "m"
-    try:
-        from ddgs import DDGS
-        results = DDGS().text(query, max_results=max_results, timelimit=timelimit)
-        return [
-            {"title": r.get("title", ""), "url": r.get("href", ""), "content": r.get("body", "")}
-            for r in (results or [])
-        ]
-    except Exception as exc:
-        logger.warning("DuckDuckGo search failed for %r: %s", query, exc)
-        return []
