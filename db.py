@@ -60,7 +60,7 @@ def seed_from_list(
     inserted = 0
     with get_session() as session:
         for data in records:
-            filters = {k: data[k] for k in match_on if k in data}
+            filters = {field_name: data[field_name] for field_name in match_on if field_name in data}
             existing = session.query(model_cls).filter_by(**filters).first()
             if not existing:
                 session.add(model_cls(**data))

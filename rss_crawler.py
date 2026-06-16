@@ -26,10 +26,10 @@ _MAX_SUMMARY_CHARS = 500
 
 def _parse_published(entry: dict) -> datetime | None:
     for field in ("published_parsed", "updated_parsed"):
-        val = entry.get(field)
-        if val:
+        value = entry.get(field)
+        if value:
             try:
-                return datetime(*val[:6])
+                return datetime(*value[:6])
             except Exception:
                 pass
     return None
@@ -42,8 +42,8 @@ def _entry_summary(entry: dict) -> str:
             return re.sub(r"<[^>]+>", " ", text).strip()[:_MAX_SUMMARY_CHARS]
     content_list = entry.get("content", [])
     if content_list:
-        raw = content_list[0].get("value", "")
-        return re.sub(r"<[^>]+>", " ", raw).strip()[:_MAX_SUMMARY_CHARS]
+        raw_html = content_list[0].get("value", "")
+        return re.sub(r"<[^>]+>", " ", raw_html).strip()[:_MAX_SUMMARY_CHARS]
     return ""
 
 

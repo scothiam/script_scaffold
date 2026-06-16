@@ -30,9 +30,9 @@ class SourceRepository:
         with self._get_session() as session:
             return session.query(self._Source).order_by(self._Source.scope, self._Source.scope_value, self._Source.id).all()
 
-    def find_by_id(self, id: int):
+    def find_by_id(self, source_id: int):
         with self._get_session() as session:
-            return session.get(self._Source, id)
+            return session.get(self._Source, source_id)
 
     def find_by_url(self, url: str):
         with self._get_session() as session:
@@ -52,12 +52,12 @@ class SourceRepository:
 
     def by_scope(self, scope: str, scope_value: str | None = None, active_only: bool = False) -> list:
         with self._get_session() as session:
-            q = session.query(self._Source).filter_by(scope=scope)
+            query = session.query(self._Source).filter_by(scope=scope)
             if scope_value is not None:
-                q = q.filter_by(scope_value=scope_value)
+                query = query.filter_by(scope_value=scope_value)
             if active_only:
-                q = q.filter(self._Source.is_active == True)
-            return q.order_by(self._Source.id).all()
+                query = query.filter(self._Source.is_active == True)
+            return query.order_by(self._Source.id).all()
 
     def active_crawlable(
         self,
@@ -67,22 +67,22 @@ class SourceRepository:
     ) -> list:
         """Return active sources matching the given scope/method filters."""
         with self._get_session() as session:
-            q = session.query(self._Source).filter(self._Source.is_active == True)
+            query = session.query(self._Source).filter(self._Source.is_active == True)
 
             if fetch_methods:
-                q = q.filter(self._Source.fetch_method.in_(fetch_methods))
+                query = query.filter(self._Source.fetch_method.in_(fetch_methods))
 
             if scopes and scope_values is not None:
-                q = q.filter(
+                query = query.filter(
                     or_(
                         self._Source.scope_value.is_(None),
                         and_(self._Source.scope.in_(scopes), self._Source.scope_value.in_(scope_values)),
                     )
                 )
             elif scopes:
-                q = q.filter(self._Source.scope.in_(scopes))
+                query = query.filter(self._Source.scope.in_(scopes))
 
-            return q.order_by(self._Source.scope, self._Source.scope_value).all()
+            return query.order_by(self._Source.scope, self._Source.scope_value).all()
 
     # ------------------------------------------------------------------
     # Source writes
@@ -94,28 +94,28 @@ class SourceRepository:
 
     def save_all(self, sources: list) -> None:
         with self._get_session() as session:
-            for s in sources:
-                session.add(s)
+            for source in sources:
+                session.add(source)
 
-    def set_active(self, id: int, active: bool):
+    def set_active(self, source_id: int, active: bool):
         with self._get_session() as session:
-            source = session.get(self._Source, id)
+            source = session.get(self._Source, source_id)
             if source is None:
                 return None
             source.is_active = active
             return source
 
-    def delete(self, id: int) -> bool:
+    def delete(self, source_id: int) -> bool:
         with self._get_session() as session:
-            source = session.get(self._Source, id)
+            source = session.get(self._Source, source_id)
             if source is None:
                 return False
             session.delete(source)
             return True
 
-    def mark_crawled(self, id: int) -> None:
+    def mark_crawled(self, source_id: int) -> None:
         with self._get_session() as session:
-            source = session.get(self._Source, id)
+            source = session.get(self._Source, source_id)
             if source:
                 source.last_crawled_at = utcnow()
 
@@ -180,10 +180,10 @@ class SourceRepository:
         cutoff = utcnow() - timedelta(days=cutoff_days)
         mention_clauses = [
             or_(
-                self._SourceItem.title.ilike(f"%{t}%"),
-                self._SourceItem.summary.ilike(f"%{t}%"),
+                self._SourceItem.title.ilike(f"%{term}%"),
+                self._SourceItem.summary.ilike(f"%{term}%"),
             )
-            for t in terms
+            for term in terms
         ]
         with self._get_session() as session:
             return (
@@ -211,10 +211,10 @@ class SourceRepository:
             return []
         mention_clauses = [
             or_(
-                self._SourceItem.title.ilike(f"%{t}%"),
-                self._SourceItem.summary.ilike(f"%{t}%"),
+                self._SourceItem.title.ilike(f"%{term}%"),
+                self._SourceItem.summary.ilike(f"%{term}%"),
             )
-            for t in terms
+            for term in terms
         ]
         with self._get_session() as session:
             return (

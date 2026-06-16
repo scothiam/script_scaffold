@@ -12,8 +12,7 @@ pip install -r requirements.txt
 |---|---|---|
 | `SQLAlchemy>=2.0` | Yes | ORM and database sessions |
 | `feedparser>=6.0` | For RSS crawling | Parses RSS/Atom feeds |
-| `openai>=1.0` | For OpenAI calls | `openai_chat()` in `search.py` |
-| `anthropic>=0.25` | For Anthropic calls | `anthropic_chat()` in `search.py` |
+| `openai>=1.0` | For AI chat calls | `ai_chat()` in `search.py` (works against any OpenAI-compatible endpoint, not just OpenAI) |
 | `tavily-python>=0.3` | For Tavily search | `tavily_search()` in `search.py` |
 | `duckduckgo-search>=5.0` | For DDG search | `ddg_search()` in `search.py` |
 | `langchain-openai>=0.1` | For LangChain + OpenAI | `get_llm()` in `llm.py` |
@@ -214,34 +213,29 @@ results = tavily_search("widget prices Canada", max_results=5, days=30)
 
 Results have the same `{title, url, content}` shape as DDG results.
 
-#### OpenAI (requires `OPENAI_API_KEY`)
+#### AI chat (requires `AI_API_KEY`, any OpenAI-compatible endpoint)
 
 ```python
-from base.search import openai_chat
+from base.search import ai_chat
 
-reply = openai_chat("Summarise this in one sentence: ...", model="gpt-4o-mini")
-# Returns None if OPENAI_API_KEY is unset or the call fails
+reply = ai_chat("Summarise this in one sentence: ...")
+# Returns None if AI_API_KEY is unset or the call fails
 
-json_reply = openai_chat(prompt, json_mode=True)  # sets response_format=json_object
+json_reply = ai_chat(prompt, json_mode=True)  # sets response_format=json_object
 ```
 
-#### Anthropic (requires `ANTHROPIC_API_KEY`)
+`ai_chat()` talks to whatever `AI_BASE_URL` points at — OpenAI itself (the default, if
+`AI_BASE_URL` is unset), Anthropic's OpenAI-compatible endpoint, a local Ollama/vLLM/LM
+Studio server, OpenRouter, etc. Model selection: explicit `model=` argument, else
+`AI_MODEL`, else `gpt-4o-mini`.
 
-```python
-from script_scaffold.search import anthropic_chat
-
-reply = anthropic_chat("Summarise this in one sentence: ...")
-# Returns None if ANTHROPIC_API_KEY is unset or the call fails
-
-json_reply = anthropic_chat(prompt, json_mode=True)  # adds a JSON-only system prompt
-```
-
-Set keys in the environment or a `.env` file (loaded by `python-dotenv` in your app):
+Set keys/endpoint in the environment or a `.env` file (loaded by `python-dotenv` in your app):
 
 ```
 TAVILY_API_KEY=tvly-...
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
+AI_API_KEY=sk-...
+AI_BASE_URL=https://api.openai.com/v1   # optional — omit to use OpenAI's default
+AI_MODEL=gpt-4o-mini                    # optional
 ```
 
 ---

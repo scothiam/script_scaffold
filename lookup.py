@@ -52,24 +52,24 @@ class EntityLookup:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def normalize(s: str) -> str:
+    def normalize(text: str) -> str:
         """Lowercase and collapse whitespace. Preserves word boundaries."""
-        return re.sub(r"\s+", " ", s.lower().strip())
+        return re.sub(r"\s+", " ", text.lower().strip())
 
     @staticmethod
-    def fingerprint(s: str) -> str:
+    def fingerprint(text: str) -> str:
         """Remove all non-alphanumeric characters and lowercase.
 
         Lets "RTX3060Ti", "RTX 3060 Ti", and "rtx-3060-ti" all map to
         the same string ("rtx3060ti") for robust matching.
         """
-        return re.sub(r"[^a-z0-9]", "", s.lower())
+        return re.sub(r"[^a-z0-9]", "", text.lower())
 
     @staticmethod
-    def token_similarity(a: str, b: str) -> float:
+    def token_similarity(text_a: str, text_b: str) -> float:
         """Jaccard similarity of whitespace-delimited tokens (0.0 – 1.0)."""
-        ta = set(EntityLookup.normalize(a).split())
-        tb = set(EntityLookup.normalize(b).split())
-        if not ta or not tb:
+        tokens_a = set(EntityLookup.normalize(text_a).split())
+        tokens_b = set(EntityLookup.normalize(text_b).split())
+        if not tokens_a or not tokens_b:
             return 0.0
-        return len(ta & tb) / len(ta | tb)
+        return len(tokens_a & tokens_b) / len(tokens_a | tokens_b)

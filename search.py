@@ -4,8 +4,9 @@ import os
 logger = logging.getLogger(__name__)
 
 _tavily_disabled = False
-_openai_disabled = False
-_anthropic_disabled = False
+_ai_disabled = False
+
+AI_DEFAULT_MODEL = "gpt-4o-mini"
 
 
 class BaseSearch:
@@ -43,8 +44,8 @@ class DdgSearch(BaseSearch):
             from ddgs import DDGS
             results = DDGS().text(query, max_results=max_results, timelimit=timelimit)
             return [
-                {"title": r.get("title", ""), "url": r.get("href", ""), "content": r.get("body", "")}
-                for r in (results or [])
+                {"title": result.get("title", ""), "url": result.get("href", ""), "content": result.get("body", "")}
+                for result in (results or [])
             ]
         except Exception as exc:
             logger.warning("DuckDuckGo search failed for %r: %s", query, exc)
@@ -70,8 +71,8 @@ class TavilySearch(BaseSearch):
                 kwargs["days"] = days
             return client.search(query, **kwargs).get("results", [])
         except Exception as exc:
-            msg = str(exc).lower()
-            if any(kw in msg for kw in ("usage limit", "upgrade your plan", "plan's set")):
+            error_message = str(exc).lower()
+            if any(keyword in error_message for keyword in ("usage limit", "upgrade your plan", "plan's set")):
                 _tavily_disabled = True
                 logger.warning("Tavily usage limit reached — disabling for this run")
             else:
@@ -100,81 +101,54 @@ def tavily_search(query: str, max_results: int = 5, days: int = 30) -> list[dict
 
 
 # ---------------------------------------------------------------------------
-# LLM helpers — single-turn chat, not web search
+# LLM helper — single-turn chat, not web search
 # ---------------------------------------------------------------------------
 
-def openai_chat(
+def ai_chat(
     prompt: str,
-    model: str = "gpt-4o-mini",
+    model: str | None = None,
     json_mode: bool = False,
     temperature: float = 0,
+    max_tokens: int | None = None,
 ) -> str | None:
-    """Send a single-turn chat prompt to OpenAI. Returns the reply text, or None on failure.
+    """Send a single-turn chat prompt to a configurable OpenAI-compatible endpoint.
 
-    Returns None (gracefully) when OPENAI_API_KEY is unset or after a permanent error,
-    so callers can degrade gracefully without crashing.
+    Endpoint, key, and model are read from AI_BASE_URL / AI_API_KEY / AI_MODEL, so the
+    same function can hit OpenAI itself (the default, if AI_BASE_URL is unset), Anthropic's
+    OpenAI-compatible endpoint, a local Ollama/vLLM/LM Studio server, OpenRouter, etc. —
+    whatever base_url the deployment points it at.
+
+    Returns None (gracefully) when AI_API_KEY is unset or after a permanent error, so
+    callers can degrade gracefully without crashing.
+
+    json_mode=True requests response_format={"type": "json_object"}; not every
+    OpenAI-compatible endpoint honors this, so verify it against your configured provider.
     """
-    global _openai_disabled
-    if _openai_disabled or not os.getenv("OPENAI_API_KEY"):
+    global _ai_disabled
+    if _ai_disabled or not os.getenv("AI_API_KEY"):
         return None
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        client = OpenAI(
+            api_key=os.environ["AI_API_KEY"],
+            base_url=os.getenv("AI_BASE_URL") or None,
+        )
         kwargs: dict = {
-            "model": model,
+            "model": model or os.getenv("AI_MODEL", AI_DEFAULT_MODEL),
             "messages": [{"role": "user", "content": prompt}],
             "temperature": temperature,
         }
+        if max_tokens is not None:
+            kwargs["max_tokens"] = max_tokens
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}
         response = client.chat.completions.create(**kwargs)
         return response.choices[0].message.content
     except Exception as exc:
-        msg = str(exc).lower()
-        if any(kw in msg for kw in ("invalid_api_key", "authentication", "quota exceeded")):
-            _openai_disabled = True
-            logger.warning("OpenAI disabled for this run: %s", exc)
+        error_message = str(exc).lower()
+        if any(keyword in error_message for keyword in ("invalid_api_key", "authentication", "quota exceeded", "credit balance", "permission_error")):
+            _ai_disabled = True
+            logger.warning("AI chat disabled for this run: %s", exc)
         else:
-            logger.warning("OpenAI chat failed: %s", exc)
-        return None
-
-
-def anthropic_chat(
-    prompt: str,
-    model: str = "claude-haiku-4-5-20251001",
-    json_mode: bool = False,
-    temperature: float = 0,
-    max_tokens: int = 1024,
-) -> str | None:
-    """Send a single-turn prompt to Anthropic. Returns the reply text, or None on failure.
-
-    Returns None (gracefully) when ANTHROPIC_API_KEY is unset or after a permanent
-    error, so callers can degrade gracefully without crashing.
-
-    When json_mode=True a system prompt is added instructing the model to respond
-    with valid JSON only (Anthropic has no native JSON-mode parameter).
-    """
-    global _anthropic_disabled
-    if _anthropic_disabled or not os.getenv("ANTHROPIC_API_KEY"):
-        return None
-    try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-        kwargs: dict = {
-            "model": model,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-            "messages": [{"role": "user", "content": prompt}],
-        }
-        if json_mode:
-            kwargs["system"] = "Respond with valid JSON only. Do not include any other text."
-        response = client.messages.create(**kwargs)
-        return response.content[0].text
-    except Exception as exc:
-        msg = str(exc).lower()
-        if any(kw in msg for kw in ("authentication_error", "invalid_api_key", "credit balance", "permission_error")):
-            _anthropic_disabled = True
-            logger.warning("Anthropic disabled for this run: %s", exc)
-        else:
-            logger.warning("Anthropic chat failed: %s", exc)
+            logger.warning("AI chat failed: %s", exc)
         return None

@@ -18,41 +18,41 @@ class BaseRepository:
         with self._get_session() as session:
             return session.query(self._model).order_by(self._model.id).all()
 
-    def find_by_id(self, id: int):
+    def find_by_id(self, record_id: int):
         with self._get_session() as session:
-            return session.get(self._model, id)
+            return session.get(self._model, record_id)
 
     # ------------------------------------------------------------------
     # Writes
     # ------------------------------------------------------------------
 
-    def save(self, obj) -> None:
+    def save(self, record) -> None:
         with self._get_session() as session:
-            session.add(obj)
+            session.add(record)
 
-    def update_by_id(self, id: int, **fields: Any) -> bool:
+    def update_by_id(self, record_id: int, **fields: Any) -> bool:
         """Update named fields on a record. Skips fields whose value is None."""
         with self._get_session() as session:
-            obj = session.get(self._model, id)
-            if obj is None:
+            record = session.get(self._model, record_id)
+            if record is None:
                 return False
-            for key, val in fields.items():
-                if val is not None:
-                    setattr(obj, key, val)
+            for field_name, value in fields.items():
+                if value is not None:
+                    setattr(record, field_name, value)
             return True
 
-    def delete_by_id(self, id: int) -> bool:
+    def delete_by_id(self, record_id: int) -> bool:
         with self._get_session() as session:
-            obj = session.get(self._model, id)
-            if obj is None:
+            record = session.get(self._model, record_id)
+            if record is None:
                 return False
-            session.delete(obj)
+            session.delete(record)
             return True
 
-    def set_pinned(self, id: int, pinned: bool) -> bool:
+    def set_pinned(self, record_id: int, pinned: bool) -> bool:
         with self._get_session() as session:
-            obj = session.get(self._model, id)
-            if obj is None:
+            record = session.get(self._model, record_id)
+            if record is None:
                 return False
-            obj.is_pinned = pinned
+            record.is_pinned = pinned
             return True
