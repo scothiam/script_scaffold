@@ -213,70 +213,58 @@ results = tavily_search("widget prices Canada", max_results=5, days=30)
 
 Results have the same `{title, url, content}` shape as DDG results.
 
-#### AI chat (requires `AI_API_KEY`, any OpenAI-compatible endpoint)
+#### AI chat (LiteLLM load types or direct OpenAI)
 
 ```python
-from base.search import ai_chat
+from script_scaffold.search import ai_chat
 
-reply = ai_chat("Summarise this in one sentence: ...")
-# Returns None if AI_API_KEY is unset or the call fails
-
-json_reply = ai_chat(prompt, json_mode=True)  # sets response_format=json_object
+reply = ai_chat("Summarise this in one sentence: ...", route="fast")
+json_reply = ai_chat(prompt, route="batch", json_mode=True)
 ```
 
-`ai_chat()` talks to whatever `AI_BASE_URL` points at — OpenAI itself (the default, if
-`AI_BASE_URL` is unset), Anthropic's OpenAI-compatible endpoint, a local Ollama/vLLM/LM
-Studio server, OpenRouter, etc. Model selection: explicit `model=` argument, else
-`AI_MODEL`, else `gpt-4o-mini`.
-
-Set keys/endpoint in the environment or a `.env` file (loaded by `python-dotenv` in your app):
+When `LITELLM_URL` is healthy, `route` selects a load type defined in
+`ai-dev-stack/litellm_config.yaml` (`fast`, `batch`, `standard`, `deep`, `code`, `audit`).
+Otherwise falls back to direct OpenAI with a mapped cloud model.
 
 ```
-TAVILY_API_KEY=tvly-...
-AI_API_KEY=sk-...
-AI_BASE_URL=https://api.openai.com/v1   # optional — omit to use OpenAI's default
-AI_MODEL=gpt-4o-mini                    # optional
+LITELLM_URL=http://localhost:4000
+LITELLM_MASTER_KEY=sk-local-dev-key
+AI_ROUTE_OVERRIDE=deep          # optional debug override
+OPENAI_API_KEY=sk-...           # fallback when proxy is down
 ```
+
+Legacy env vars `AI_FILTER_MODEL`, `LLM_ROUTE`, and `AI_MODEL` still work but are deprecated.
 
 ---
 
 ### `llm.py` — LangChain provider factory
 
-For pipelines that need structured outputs via `llm.with_structured_output(Schema)`. Supports OpenAI, Anthropic, and Ollama with a single `LLM_PROVIDER` env var switch.
+For pipelines that need structured outputs via `llm.with_structured_output(Schema)`.
 
 ```python
 from script_scaffold.llm import get_llm, check_credentials, apply_options, describe
 
-# Validate credentials before starting a long pipeline
 check_credentials()
 
-# Get a LangChain chat model
-llm = get_llm(temperature=0.1)
+llm = get_llm(temperature=0.1, route="deep")
+llm = get_llm(temperature=0.1, route="standard")  # structured extraction
 
-# Structured output
-from pydantic import BaseModel
-class MySchema(BaseModel):
-    sentiment: str
-    confidence: float
-
-result = llm.with_structured_output(MySchema).invoke("Analyse: ...")
-
-# Apply CLI flags before any LLM call
-apply_options(provider="anthropic", model="claude-sonnet-4-6")
-
-# Show active config in logs
-print(describe())  # "anthropic  model=claude-sonnet-4-6"
+apply_options(provider="anthropic", model="claude-sonnet-4-6")  # CLI override
+print(describe())  # "litellm  route=deep  url=http://localhost:4000/v1"
 ```
 
 **Environment variables:**
 
 | Variable | Purpose |
 |---|---|
-| `LLM_PROVIDER` | `openai` (default) \| `anthropic` \| `ollama` |
-| `LLM_MODEL` | Override model for any provider |
-| `OPENAI_MODEL` | OpenAI model (default: `gpt-4o-mini`) |
-| `ANTHROPIC_MODEL` | Anthropic model (default: `claude-haiku-4-5-20251001`) |
-| `OLLAMA_MODEL` | Ollama model (default: `qwen3:14b`) |
+| `LLM_PROVIDER` | `litellm` (default) \| `openai` \| `anthropic` \| `ollama` |
+| `LITELLM_URL` | LiteLLM proxy base URL (default: `http://localhost:4000`) |
+| `LITELLM_MASTER_KEY` | Proxy auth key |
+| `AI_ROUTE_OVERRIDE` | Force all routes to this load type (debug) |
+| `LLM_MODEL` | CLI `--model` override (overrides route) |
+| `OPENAI_MODEL` | OpenAI model when `LLM_PROVIDER=openai` |
+| `ANTHROPIC_MODEL` | Anthropic model when `LLM_PROVIDER=anthropic` |
+| `OLLAMA_MODEL` | Ollama model when `LLM_PROVIDER=ollama` |
 | `OLLAMA_BASE_URL` | Ollama server URL (default: `http://localhost:11434`) |
 
 ---

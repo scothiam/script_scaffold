@@ -11,11 +11,29 @@ _ai_disabled = False
 AI_DEFAULT_MODEL = "gpt-4o-mini"
 LITELLM_DEFAULT_URL = "http://localhost:4000"
 LITELLM_DEFAULT_KEY = "sk-local-dev-key"
-LITELLM_LIGHT_MODEL = "light"
-LITELLM_HEAVY_MODEL = "heavy"
+
+# LiteLLM load-type route names (see ai-dev-stack/litellm_config.yaml).
+AI_LOAD_TYPES = frozenset({"fast", "batch", "standard", "deep", "code", "audit"})
+
+# Legacy aliases still accepted by resolve_route().
+_LEGACY_ROUTE_ALIASES = {"light": "batch", "heavy": "deep"}
+
+# When LiteLLM is down, map load types to direct OpenAI model IDs.
+_DIRECT_CLOUD_MODEL: dict[str, str] = {
+    "fast": "gpt-4o-mini",
+    "batch": "gpt-4o-mini",
+    "standard": "gpt-4o-mini",
+    "deep": "gpt-4o",
+    "code": "gpt-4o",
+    "audit": "gpt-4o",
+}
+
+# Deprecated — use AI_LOAD_TYPES and resolve_route() instead.
+LITELLM_LIGHT_MODEL = "batch"
+LITELLM_HEAVY_MODEL = "deep"
 
 _UNCACHED = object()
-_ai_config_cache: tuple[str, str | None, str] | None | object = _UNCACHED
+_ai_config_cache: tuple[str, str | None] | None | object = _UNCACHED
 
 
 class BaseSearch:
@@ -127,12 +145,41 @@ def _litellm_healthy(url: str) -> bool:
         return False
 
 
-def resolve_ai_config() -> tuple[str, str | None, str] | None:
-    """Resolve API key, base URL, and default model for ai_chat().
+def resolve_route(route: str | None = None, *, default: str = "fast") -> str:
+    """Resolve a LiteLLM load-type route name for the current request.
+
+    Priority: AI_ROUTE_OVERRIDE → explicit route arg → legacy env vars
+    (AI_FILTER_MODEL, LLM_ROUTE, AI_MODEL) → default.
+    """
+    override = os.getenv("AI_ROUTE_OVERRIDE", "").strip()
+    if override:
+        return _LEGACY_ROUTE_ALIASES.get(override, override)
+
+    if route:
+        return _LEGACY_ROUTE_ALIASES.get(route, route)
+
+    for env_name in ("AI_FILTER_MODEL", "LLM_ROUTE", "AI_MODEL"):
+        legacy = os.getenv(env_name, "").strip()
+        if legacy:
+            logger.debug("Using deprecated %s=%r — set route= at call site instead", env_name, legacy)
+            return _LEGACY_ROUTE_ALIASES.get(legacy, legacy)
+
+    return default
+
+
+def route_to_model(route: str, *, via_litellm: bool) -> str:
+    """Return the model string to pass to the OpenAI-compatible API."""
+    if via_litellm:
+        return route
+    return _DIRECT_CLOUD_MODEL.get(route, AI_DEFAULT_MODEL)
+
+
+def resolve_ai_config() -> tuple[str, str | None] | None:
+    """Resolve API key and base URL for ai_chat() / get_llm().
 
     Priority (matches ai-dev-stack):
     1. Explicit AI_BASE_URL — use AI_API_KEY (or OPENAI_API_KEY) with that endpoint.
-    2. LiteLLM proxy at LITELLM_URL when healthy — local Ollama routes with cloud fallback.
+    2. LiteLLM proxy at LITELLM_URL when healthy — load-type routes with cloud fallback.
     3. Direct OpenAI via OPENAI_API_KEY or legacy AI_API_KEY.
     """
     global _ai_config_cache
@@ -143,7 +190,7 @@ def resolve_ai_config() -> tuple[str, str | None, str] | None:
     if explicit_base:
         api_key = os.getenv("AI_API_KEY") or os.getenv("OPENAI_API_KEY")
         if api_key:
-            config = (api_key, explicit_base, os.getenv("AI_MODEL", AI_DEFAULT_MODEL))
+            config = (api_key, explicit_base)
             _ai_config_cache = config
             return config
         _ai_config_cache = None
@@ -154,16 +201,15 @@ def resolve_ai_config() -> tuple[str, str | None, str] | None:
         config = (
             os.getenv("LITELLM_MASTER_KEY", LITELLM_DEFAULT_KEY),
             f"{litellm_url.rstrip('/')}/v1",
-            os.getenv("AI_MODEL", LITELLM_LIGHT_MODEL),
         )
-        logger.debug("AI routing via LiteLLM proxy at %s (model=%s)", litellm_url, config[2])
+        logger.debug("AI routing via LiteLLM proxy at %s", litellm_url)
         _ai_config_cache = config
         return config
 
     openai_key = os.getenv("OPENAI_API_KEY") or os.getenv("AI_API_KEY")
     if openai_key:
-        config = (openai_key, None, os.getenv("AI_MODEL", AI_DEFAULT_MODEL))
-        logger.debug("AI routing via direct OpenAI API (model=%s)", config[2])
+        config = (openai_key, None)
+        logger.debug("AI routing via direct OpenAI API")
         _ai_config_cache = config
         return config
 
@@ -172,13 +218,13 @@ def resolve_ai_config() -> tuple[str, str | None, str] | None:
 
 
 def ai_default_model() -> str:
-    """Default model name for the resolved AI backend."""
-    config = resolve_ai_config()
-    return config[2] if config else AI_DEFAULT_MODEL
+    """Default direct-OpenAI model when no LiteLLM proxy is available."""
+    return AI_DEFAULT_MODEL
 
 
 def ai_chat(
     prompt: str,
+    route: str | None = None,
     model: str | None = None,
     json_mode: bool = False,
     temperature: float = 0,
@@ -186,13 +232,10 @@ def ai_chat(
 ) -> str | None:
     """Send a single-turn chat prompt to a configurable OpenAI-compatible endpoint.
 
-    Routing (when AI_BASE_URL is unset): LiteLLM proxy at localhost:4000 if running
-    (ai-dev-stack ``light``/``heavy`` routes — local Ollama with cloud fallback), else
-    direct OpenAI via OPENAI_API_KEY or AI_API_KEY. Set AI_BASE_URL explicitly to
-    override. Returns None when no credentials are available or after a permanent error.
-
-    json_mode=True requests response_format={"type": "json_object"}; not every
-    OpenAI-compatible endpoint honors this, so verify it against your configured provider.
+    Use ``route`` to select a LiteLLM load type (fast, batch, standard, deep, code,
+    audit). When the proxy is unavailable, falls back to direct OpenAI with a
+    mapped cloud model. Returns None when no credentials are available or after a
+    permanent error.
     """
     global _ai_disabled
     if _ai_disabled:
@@ -202,12 +245,18 @@ def ai_chat(
     if config is None:
         return None
 
-    api_key, base_url, default_model = config
+    api_key, base_url = config
+    via_litellm = base_url is not None
+    resolved_route = resolve_route(route, default="fast")
+    effective_model = model or route_to_model(resolved_route, via_litellm=via_litellm)
+    if not via_litellm and os.getenv("AI_MODEL"):
+        effective_model = os.getenv("AI_MODEL", effective_model)
+
     try:
         from openai import OpenAI
         client = OpenAI(api_key=api_key, base_url=base_url)
         kwargs: dict = {
-            "model": model or default_model,
+            "model": effective_model,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": temperature,
         }
