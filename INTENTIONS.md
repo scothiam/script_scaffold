@@ -161,15 +161,14 @@ or a hit usage limit returns `[]` rather than raising, because search is treated
 usage-limit error, so a long-running batch job doesn't keep re-hitting (and re-logging) a
 plan limit on every subsequent call.
 
-**`ai_chat`**
+**`ai_chat` / `resolve_ai_config`**
 Intention: a single-turn "ask an LLM one question, get one string back" helper for use
 cases too simple to justify LangChain (`llm.py`) — e.g. a one-off summarization or
-classification inside a script. Deliberately provider-agnostic: it talks to whatever
-OpenAI-compatible endpoint `AI_BASE_URL` points at (OpenAI itself by default, Anthropic's
-own OpenAI-compatible endpoint, a local Ollama/vLLM/LM Studio server, OpenRouter, etc.)
-through the one `openai` client, rather than hard-coding a call per provider — adding a
-new provider is a config change, not a new function. Same fail-soft contract as the
-search functions: missing key or permanent auth/quota error returns `None` and disables
+classification inside a script. When `AI_BASE_URL` is unset, prefers the ai-dev-stack
+LiteLLM proxy (`light`/`heavy` routes — local Ollama with cloud fallback), then direct
+OpenAI via `OPENAI_API_KEY` or legacy `AI_API_KEY`. Set `AI_BASE_URL` explicitly to
+target any other OpenAI-compatible endpoint. Same fail-soft contract as the search
+functions: no credentials or permanent auth/quota error returns `None` and disables
 itself for the run, rather than crashing the calling script.
 
 ---

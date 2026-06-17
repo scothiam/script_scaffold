@@ -1,5 +1,7 @@
 import logging
 import os
+import urllib.error
+import urllib.request
 
 logger = logging.getLogger(__name__)
 
@@ -7,6 +9,13 @@ _tavily_disabled = False
 _ai_disabled = False
 
 AI_DEFAULT_MODEL = "gpt-4o-mini"
+LITELLM_DEFAULT_URL = "http://localhost:4000"
+LITELLM_DEFAULT_KEY = "sk-local-dev-key"
+LITELLM_LIGHT_MODEL = "light"
+LITELLM_HEAVY_MODEL = "heavy"
+
+_UNCACHED = object()
+_ai_config_cache: tuple[str, str | None, str] | None | object = _UNCACHED
 
 
 class BaseSearch:
@@ -104,6 +113,70 @@ def tavily_search(query: str, max_results: int = 5, days: int = 30) -> list[dict
 # LLM helper — single-turn chat, not web search
 # ---------------------------------------------------------------------------
 
+def _litellm_healthy(url: str) -> bool:
+    master_key = os.getenv("LITELLM_MASTER_KEY", LITELLM_DEFAULT_KEY)
+    request = urllib.request.Request(
+        f"{url.rstrip('/')}/v1/models",
+        headers={"Authorization": f"Bearer {master_key}"},
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=3) as response:
+            return response.status == 200
+    except (urllib.error.URLError, OSError, TimeoutError):
+        return False
+
+
+def resolve_ai_config() -> tuple[str, str | None, str] | None:
+    """Resolve API key, base URL, and default model for ai_chat().
+
+    Priority (matches ai-dev-stack):
+    1. Explicit AI_BASE_URL — use AI_API_KEY (or OPENAI_API_KEY) with that endpoint.
+    2. LiteLLM proxy at LITELLM_URL when healthy — local Ollama routes with cloud fallback.
+    3. Direct OpenAI via OPENAI_API_KEY or legacy AI_API_KEY.
+    """
+    global _ai_config_cache
+    if _ai_config_cache is not _UNCACHED:
+        return _ai_config_cache  # type: ignore[return-value]
+
+    explicit_base = os.getenv("AI_BASE_URL")
+    if explicit_base:
+        api_key = os.getenv("AI_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if api_key:
+            config = (api_key, explicit_base, os.getenv("AI_MODEL", AI_DEFAULT_MODEL))
+            _ai_config_cache = config
+            return config
+        _ai_config_cache = None
+        return None
+
+    litellm_url = os.getenv("LITELLM_URL", LITELLM_DEFAULT_URL)
+    if _litellm_healthy(litellm_url):
+        config = (
+            os.getenv("LITELLM_MASTER_KEY", LITELLM_DEFAULT_KEY),
+            f"{litellm_url.rstrip('/')}/v1",
+            os.getenv("AI_MODEL", LITELLM_LIGHT_MODEL),
+        )
+        logger.debug("AI routing via LiteLLM proxy at %s (model=%s)", litellm_url, config[2])
+        _ai_config_cache = config
+        return config
+
+    openai_key = os.getenv("OPENAI_API_KEY") or os.getenv("AI_API_KEY")
+    if openai_key:
+        config = (openai_key, None, os.getenv("AI_MODEL", AI_DEFAULT_MODEL))
+        logger.debug("AI routing via direct OpenAI API (model=%s)", config[2])
+        _ai_config_cache = config
+        return config
+
+    _ai_config_cache = None
+    return None
+
+
+def ai_default_model() -> str:
+    """Default model name for the resolved AI backend."""
+    config = resolve_ai_config()
+    return config[2] if config else AI_DEFAULT_MODEL
+
+
 def ai_chat(
     prompt: str,
     model: str | None = None,
@@ -113,28 +186,28 @@ def ai_chat(
 ) -> str | None:
     """Send a single-turn chat prompt to a configurable OpenAI-compatible endpoint.
 
-    Endpoint, key, and model are read from AI_BASE_URL / AI_API_KEY / AI_MODEL, so the
-    same function can hit OpenAI itself (the default, if AI_BASE_URL is unset), Anthropic's
-    OpenAI-compatible endpoint, a local Ollama/vLLM/LM Studio server, OpenRouter, etc. —
-    whatever base_url the deployment points it at.
-
-    Returns None (gracefully) when AI_API_KEY is unset or after a permanent error, so
-    callers can degrade gracefully without crashing.
+    Routing (when AI_BASE_URL is unset): LiteLLM proxy at localhost:4000 if running
+    (ai-dev-stack ``light``/``heavy`` routes — local Ollama with cloud fallback), else
+    direct OpenAI via OPENAI_API_KEY or AI_API_KEY. Set AI_BASE_URL explicitly to
+    override. Returns None when no credentials are available or after a permanent error.
 
     json_mode=True requests response_format={"type": "json_object"}; not every
     OpenAI-compatible endpoint honors this, so verify it against your configured provider.
     """
     global _ai_disabled
-    if _ai_disabled or not os.getenv("AI_API_KEY"):
+    if _ai_disabled:
         return None
+
+    config = resolve_ai_config()
+    if config is None:
+        return None
+
+    api_key, base_url, default_model = config
     try:
         from openai import OpenAI
-        client = OpenAI(
-            api_key=os.environ["AI_API_KEY"],
-            base_url=os.getenv("AI_BASE_URL") or None,
-        )
+        client = OpenAI(api_key=api_key, base_url=base_url)
         kwargs: dict = {
-            "model": model or os.getenv("AI_MODEL", AI_DEFAULT_MODEL),
+            "model": model or default_model,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": temperature,
         }
