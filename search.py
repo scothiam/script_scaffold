@@ -264,6 +264,10 @@ def ai_chat(
             kwargs["max_tokens"] = max_tokens
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}
+            # Qwen3 thinking models return empty content via LiteLLM's ollama/
+            # provider unless thinking is disabled — breaks JSON listing validation.
+            if via_litellm:
+                kwargs["reasoning_effort"] = "none"
         response = client.chat.completions.create(**kwargs)
         return response.choices[0].message.content
     except Exception as exc:
