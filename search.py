@@ -35,6 +35,47 @@ LITELLM_HEAVY_MODEL = "deep"
 _UNCACHED = object()
 _ai_config_cache: tuple[str, str | None] | None | object = _UNCACHED
 
+_DDG_EMPTY_MARKERS = ("no results found",)
+_DDG_NETWORK_MARKERS = (
+    "timeout",
+    "timed out",
+    "connecttimeout",
+    "connection refused",
+    "connecterror",
+    "connection error",
+    "operation timed out",
+)
+
+
+def classify_ddg_exception(exc: Exception) -> tuple[str, int]:
+    """Return (outcome, log_level) for a DDG/ddgs library exception."""
+    msg = str(exc).lower()
+    if any(marker in msg for marker in _DDG_EMPTY_MARKERS):
+        return "empty", logging.INFO
+    if any(marker in msg for marker in _DDG_NETWORK_MARKERS):
+        return "error", logging.WARNING
+    return "failed", logging.WARNING
+
+
+def log_ddg_outcome(
+    query: str,
+    exc: Exception,
+    *,
+    context: str = "",
+) -> str:
+    """Log a DDG search exception at the appropriate level. Returns outcome token."""
+    outcome, level = classify_ddg_exception(exc)
+    prefix = f"[{context}] " if context else ""
+    logger.log(
+        level,
+        "DDG search %s %squery=%r: %s",
+        outcome,
+        prefix,
+        query,
+        exc,
+    )
+    return outcome
+
 
 class BaseSearch:
     """Abstract base for all web/API search implementations.
@@ -58,7 +99,17 @@ class BaseSearch:
 class DdgSearch(BaseSearch):
     """DuckDuckGo text search. No API key required."""
 
-    def search(self, query: str, max_results: int = 5, days: int | None = None) -> list[dict]:
+    last_outcome: str = "ok"
+
+    def search(
+        self,
+        query: str,
+        max_results: int = 5,
+        days: int | None = None,
+        *,
+        context: str = "",
+    ) -> list[dict]:
+        self.last_outcome = "ok"
         timelimit: str | None = None
         if days is not None:
             if days <= 1:
@@ -70,12 +121,17 @@ class DdgSearch(BaseSearch):
         try:
             from ddgs import DDGS
             results = DDGS().text(query, max_results=max_results, timelimit=timelimit)
-            return [
+            parsed = [
                 {"title": result.get("title", ""), "url": result.get("href", ""), "content": result.get("body", "")}
                 for result in (results or [])
             ]
+            if not parsed:
+                self.last_outcome = "empty"
+                prefix = f"[{context}] " if context else ""
+                logger.info("DDG search empty %squery=%r", prefix, query)
+            return parsed
         except Exception as exc:
-            logger.warning("DuckDuckGo search failed for %r: %s", query, exc)
+            self.last_outcome = log_ddg_outcome(query, exc, context=context)
             return []
 
 
@@ -111,12 +167,18 @@ class TavilySearch(BaseSearch):
 # Backward-compatible module-level functions
 # ---------------------------------------------------------------------------
 
-def ddg_search(query: str, max_results: int = 5, days: int | None = None) -> list[dict]:
+def ddg_search(
+    query: str,
+    max_results: int = 5,
+    days: int | None = None,
+    *,
+    context: str = "",
+) -> list[dict]:
     """Run a DuckDuckGo search. No API key required.
 
     Results normalised to {title, url, content}.
     """
-    return DdgSearch().search(query, max_results=max_results, days=days)
+    return DdgSearch().search(query, max_results=max_results, days=days, context=context)
 
 
 def tavily_search(query: str, max_results: int = 5, days: int = 30) -> list[dict]:
