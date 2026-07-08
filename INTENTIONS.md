@@ -174,6 +174,22 @@ itself for the run, rather than crashing the calling script.
 
 ---
 
+## ai_gates.py — fast per-item AI filter gates
+
+**`GateResult` / `FastAiGate`**
+Intention: give filter pipelines a shared skeleton for "ask the fast model one yes/no
+question about this item, keep or reject it" without each project re-implementing
+`ai_chat` wiring, JSON parsing, skip shortcuts, and fail-open behavior. Subclasses
+own the prompt and reply parser; the base class owns the call contract
+(`route=fast`, JSON mode, `(keep, reason, ai_called)` outcome). Same fail-soft
+default as `ai_chat`: when `fail_open=True` (the default), a missing API, failed
+call, or unparseable reply keeps the item rather than dropping it silently.
+Downstream projects use this for post-fetch gates (resume vs job posting, hard
+requirement checks, remote eligibility) where a keyword list would require endless
+maintenance.
+
+---
+
 ## llm.py — LangChain provider factory
 
 **`get_llm` / `check_credentials` / `apply_options` / `describe`**

@@ -237,6 +237,34 @@ Legacy env vars `AI_FILTER_MODEL`, `LLM_ROUTE`, and `AI_MODEL` still work but ar
 
 ---
 
+### `ai_gates.py` — fast per-item AI filter gates
+
+For pipelines that classify one search result at a time (keep vs reject) using
+`route=fast`. Subclass `FastAiGate`, implement `build_prompt` and `parse_reply`,
+optionally override `should_skip` for cheap bypass rules.
+
+```python
+from script_scaffold.ai_gates import FastAiGate, GateResult
+
+class ResumeGate(FastAiGate):
+    reject_reason = "personal_resume"
+
+    def build_prompt(self, *, title: str, url: str, content: str) -> str:
+        return f"Title: {title!r}\nURL: {url}\nBody: {content[:2000]!r}\n..."
+
+    def parse_reply(self, reply: str | None) -> bool | None:
+        ...
+
+    def should_skip(self, *, url: str, **_) -> bool:
+        return url.startswith("https://boards.example/jobs/")
+
+gate = ResumeGate()
+result: GateResult = gate.evaluate(fail_open=True, title="...", url="...", content="...")
+# result.keep, result.reason, result.ai_called
+```
+
+---
+
 ### `llm.py` — LangChain provider factory
 
 For pipelines that need structured outputs via `llm.with_structured_output(Schema)`.
