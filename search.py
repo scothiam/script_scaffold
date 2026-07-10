@@ -2,6 +2,8 @@ import logging
 import os
 import urllib.error
 import urllib.request
+from dataclasses import dataclass, field
+from typing import Callable, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -190,6 +192,145 @@ def tavily_search(query: str, max_results: int = 5, days: int = 30) -> list[dict
 
 
 # ---------------------------------------------------------------------------
+# Merged web search
+# ---------------------------------------------------------------------------
+
+def _normalize_search_hit(hit: dict) -> dict:
+    """Ensure {title, url, content} keys for merged results."""
+    return {
+        "title": hit.get("title") or "",
+        "url": hit.get("url") or hit.get("href") or "",
+        "content": hit.get("content") or hit.get("body") or "",
+    }
+
+
+@dataclass
+class SearchOutcome:
+    """Per-engine result of a web search call."""
+
+    engine: str
+    outcome: str
+    count: int = 0
+
+
+@dataclass
+class MergeWebSearchResult:
+    """Merged hits plus per-engine outcomes for metrics and fallback decisions."""
+
+    results: list[dict] = field(default_factory=list)
+    outcomes: list[SearchOutcome] = field(default_factory=list)
+
+
+def merge_web_search(
+    query: str,
+    *,
+    max_results: int = 10,
+    days: int | None = None,
+    prefer_tavily: bool = False,
+    include_tavily: bool = True,
+    ddg_context: str = "",
+    dedupe_key: Callable[[dict], str] | None = None,
+    tag_sources: bool = False,
+) -> list[dict]:
+    """Merge DuckDuckGo and optional Tavily results with URL deduplication."""
+    return merge_web_search_detailed(
+        query,
+        max_results=max_results,
+        days=days,
+        prefer_tavily=prefer_tavily,
+        include_tavily=include_tavily,
+        ddg_context=ddg_context,
+        dedupe_key=dedupe_key,
+        tag_sources=tag_sources,
+    ).results
+
+
+def merge_web_search_detailed(
+    query: str,
+    *,
+    max_results: int = 10,
+    days: int | None = None,
+    prefer_tavily: bool = False,
+    include_tavily: bool = True,
+    ddg_context: str = "",
+    dedupe_key: Callable[[dict], str] | None = None,
+    tag_sources: bool = False,
+    engines: Sequence[BaseSearch] | None = None,
+) -> MergeWebSearchResult:
+    """Merge web search engines; return hits and per-engine outcomes."""
+    key_fn = dedupe_key or (lambda hit: (hit.get("url") or "").strip().lower())
+
+    if prefer_tavily and include_tavily and os.getenv("TAVILY_API_KEY"):
+        tavily = TavilySearch()
+        tavily_raw = [
+            _normalize_search_hit(h)
+            for h in tavily.search(query, max_results=max_results, days=days or 30)
+        ]
+        tavily_outcome = SearchOutcome(
+            engine="tavily",
+            outcome="empty" if not tavily_raw else "ok",
+            count=len(tavily_raw),
+        )
+        if tavily_raw:
+            if tag_sources:
+                for hit in tavily_raw:
+                    hit["_web_source"] = "tavily"
+            return MergeWebSearchResult(results=tavily_raw, outcomes=[tavily_outcome])
+
+        ddg = DdgSearch()
+        ddg_raw = [
+            _normalize_search_hit(h)
+            for h in ddg.search(query, max_results=max_results, days=days, context=ddg_context)
+        ]
+        if tag_sources:
+            for hit in ddg_raw:
+                hit["_web_source"] = "ddg"
+        return MergeWebSearchResult(
+            results=ddg_raw,
+            outcomes=[
+                tavily_outcome,
+                SearchOutcome(engine="ddg", outcome=ddg.last_outcome, count=len(ddg_raw)),
+            ],
+        )
+
+    ddg = DdgSearch()
+    batches: list[tuple[str, list[dict], str]] = []
+    ddg_raw = [
+        _normalize_search_hit(h)
+        for h in ddg.search(query, max_results=max_results, days=days, context=ddg_context)
+    ]
+    batches.append(("ddg", ddg_raw, ddg.last_outcome))
+
+    if include_tavily and os.getenv("TAVILY_API_KEY"):
+        tavily = TavilySearch()
+        tavily_raw = [
+            _normalize_search_hit(h)
+            for h in tavily.search(query, max_results=max_results, days=days or 30)
+        ]
+        batches.append(("tavily", tavily_raw, "empty" if not tavily_raw else "ok"))
+    elif include_tavily:
+        batches.append(("tavily", [], "disabled"))
+
+    seen: set[str] = set()
+    merged: list[dict] = []
+    outcomes: list[SearchOutcome] = []
+
+    for engine, raw, outcome in batches:
+        outcomes.append(SearchOutcome(engine=engine, outcome=outcome, count=len(raw)))
+        for hit in raw:
+            key = key_fn(hit)
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            if tag_sources:
+                hit = dict(hit)
+                hit["_web_source"] = engine
+            merged.append(hit)
+
+    return MergeWebSearchResult(results=merged, outcomes=outcomes)
+
+
+# ---------------------------------------------------------------------------
 # LLM helper — single-turn chat, not web search
 # ---------------------------------------------------------------------------
 
@@ -340,3 +481,45 @@ def ai_chat(
         else:
             logger.warning("AI chat failed: %s", exc)
         return None
+
+
+@dataclass
+class AiChatChunkOutcome:
+    """Per-prompt outcome from ``ai_chat_chunks``."""
+
+    reply: str | None
+    triggered: bool
+    skip_reason: str | None = None
+
+
+def ai_chat_chunks(
+    prompts: list[str],
+    *,
+    route: str | None = "batch",
+    json_mode: bool = False,
+    max_tokens: int | None = None,
+    temperature: float = 0,
+) -> list[AiChatChunkOutcome]:
+    """Run ``ai_chat`` once per prompt — transport-only batch helper.
+
+    Domain backends (job-hunt, price-checker) build prompts and parse JSON
+    replies; this function only sequences LLM calls.
+    """
+    outcomes: list[AiChatChunkOutcome] = []
+    for prompt in prompts:
+        reply = ai_chat(
+            prompt,
+            route=route,
+            json_mode=json_mode,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+        if reply is None:
+            outcomes.append(AiChatChunkOutcome(
+                reply=None,
+                triggered=False,
+                skip_reason="no_api_key_or_call_failed",
+            ))
+        else:
+            outcomes.append(AiChatChunkOutcome(reply=reply, triggered=True))
+    return outcomes

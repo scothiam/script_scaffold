@@ -1,0 +1,500 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - heading "GPU Price Tracker" [level=1] [ref=e6]
+      - paragraph [ref=e7]: 33 GPUs · 28 prices found today · updated 16/06/2026, 17:21:54
+  - main [ref=e8]:
+    - table [ref=e11]:
+      - rowgroup [ref=e12]:
+        - row "GPU VRAM Gen TDP Slot eBay Today" [ref=e13]:
+          - columnheader "GPU" [ref=e14]
+          - columnheader "VRAM" [ref=e15]
+          - columnheader "Gen" [ref=e16]
+          - columnheader "TDP" [ref=e17]
+          - columnheader "Slot" [ref=e18]
+          - columnheader "eBay" [ref=e19]
+          - columnheader "Today" [ref=e20]
+      - rowgroup [ref=e21]:
+        - row "PinnedRTX 3080 20GB 20GB GDDR6X Ampere 320W dual CAD $867.28 Pre-Owned $1,135.00" [ref=e22] [cursor=pointer]:
+          - cell "PinnedRTX 3080 20GB" [ref=e23]: 📌RTX 3080 20GB
+          - cell "20GB GDDR6X" [ref=e25]:
+            - text: 20GB
+            - generic [ref=e26]: GDDR6X
+          - cell "Ampere" [ref=e27]
+          - cell "320W" [ref=e28]
+          - cell "dual" [ref=e29]
+          - cell "CAD $867.28 Pre-Owned" [ref=e30]:
+            - link "CAD $867.28" [ref=e31]:
+              - /url: https://www.ebay.ca/itm/406885144731
+            - generic [ref=e32]: Pre-Owned
+          - cell "$1,135.00" [ref=e33]:
+            - link "$1,135.00" [ref=e34]:
+              - /url: https://bestvaluegpu.com/en-ca/history/new-and-used-rtx-3080-price-history-and-specs/
+        - row "PinnedRTX 3090 24GB GDDR6X Ampere 350W dual CAD $1,501.29 Pre-Owned $60.00" [ref=e35] [cursor=pointer]:
+          - cell "PinnedRTX 3090" [ref=e36]: 📌RTX 3090
+          - cell "24GB GDDR6X" [ref=e38]:
+            - text: 24GB
+            - generic [ref=e39]: GDDR6X
+          - cell "Ampere" [ref=e40]
+          - cell "350W" [ref=e41]
+          - cell "dual" [ref=e42]
+          - cell "CAD $1,501.29 Pre-Owned" [ref=e43]:
+            - link "CAD $1,501.29" [ref=e44]:
+              - /url: https://www.ebay.ca/itm/168453282783
+            - generic [ref=e45]: Pre-Owned
+          - cell "$60.00" [ref=e46]:
+            - link "$60.00" [ref=e47]:
+              - /url: https://www.alibaba.com/showroom/nvidia-rtx-3090-price.html
+        - row "PinnedRTX 5060 Ti (16GB) 16GB GDDR7 Blackwell 180W dual CAD $699.49 Very Good - Refurbished $419.99" [ref=e48] [cursor=pointer]:
+          - cell "PinnedRTX 5060 Ti (16GB)" [ref=e49]: 📌RTX 5060 Ti (16GB)
+          - cell "16GB GDDR7" [ref=e51]:
+            - text: 16GB
+            - generic [ref=e52]: GDDR7
+          - cell "Blackwell" [ref=e53]
+          - cell "180W" [ref=e54]
+          - cell "dual" [ref=e55]
+          - cell "CAD $699.49 Very Good - Refurbished" [ref=e56]:
+            - link "CAD $699.49" [ref=e57]:
+              - /url: https://www.ebay.ca/itm/278082401762
+            - generic [ref=e58]: Very Good - Refurbished
+          - cell "$419.99" [ref=e59]:
+            - link "$419.99" [ref=e60]:
+              - /url: https://www.reddit.com/r/buildapcsales/comments/1twtm6w/gpu_pny_geforce_rtx_5060_ti_overclocked_16gb/
+        - row "A10 24GB GDDR6 Ampere 150W single — $1,100.00" [ref=e61] [cursor=pointer]:
+          - cell "A10" [ref=e62]: A10
+          - cell "24GB GDDR6" [ref=e64]:
+            - text: 24GB
+            - generic [ref=e65]: GDDR6
+          - cell "Ampere" [ref=e66]
+          - cell "150W" [ref=e67]
+          - cell "single" [ref=e68]
+          - cell "—" [ref=e69]
+          - cell "$1,100.00" [ref=e70]:
+            - link "$1,100.00" [ref=e71]:
+              - /url: https://www.fool.com/investing/2024/06/03/should-you-buy-nvidia-stock-before-the-stock-split/
+        - row "A2 16GB GDDR6 Ampere 60W — CAD $558.20 Brand New —" [ref=e72] [cursor=pointer]:
+          - cell "A2" [ref=e73]: A2
+          - cell "16GB GDDR6" [ref=e75]:
+            - text: 16GB
+            - generic [ref=e76]: GDDR6
+          - cell "Ampere" [ref=e77]
+          - cell "60W" [ref=e78]
+          - cell "—" [ref=e79]
+          - cell "CAD $558.20 Brand New" [ref=e80]:
+            - link "CAD $558.20" [ref=e81]:
+              - /url: https://www.ebay.ca/itm/256776594724
+            - generic [ref=e82]: Brand New
+          - cell "—" [ref=e83]
+        - row "Quadro RTX 6000 24GB GDDR6 Turing — — CAD $1,175.09 Pre-Owned $3,712.89" [ref=e84] [cursor=pointer]:
+          - cell "Quadro RTX 6000" [ref=e85]: Quadro RTX 6000
+          - cell "24GB GDDR6" [ref=e87]:
+            - text: 24GB
+            - generic [ref=e88]: GDDR6
+          - cell "Turing" [ref=e89]
+          - cell "—" [ref=e90]
+          - cell "—" [ref=e91]
+          - cell "CAD $1,175.09 Pre-Owned" [ref=e92]:
+            - link "CAD $1,175.09" [ref=e93]:
+              - /url: https://www.ebay.ca/itm/278048575583
+            - generic [ref=e94]: Pre-Owned
+          - cell "$3,712.89" [ref=e95]:
+            - link "$3,712.89" [ref=e96]:
+              - /url: https://www.ebay.ca/sch/i.html?_nkw=quadro+rtx+6000
+        - row "RTX 2080 ti (22GB) 22GB GDDR6 Turing — — CAD $674.87 Pre-Owned $118.99" [ref=e97] [cursor=pointer]:
+          - cell "RTX 2080 ti (22GB)" [ref=e98]: RTX 2080 ti (22GB)
+          - cell "22GB GDDR6" [ref=e100]:
+            - text: 22GB
+            - generic [ref=e101]: GDDR6
+          - cell "Turing" [ref=e102]
+          - cell "—" [ref=e103]
+          - cell "—" [ref=e104]
+          - cell "CAD $674.87 Pre-Owned" [ref=e105]:
+            - link "CAD $674.87" [ref=e106]:
+              - /url: https://www.ebay.ca/itm/188397472709
+            - generic [ref=e107]: Pre-Owned
+          - cell "$118.99" [ref=e108]:
+            - link "$118.99" [ref=e109]:
+              - /url: https://slickdeals.net/e/14371229-corsair-hydro-x-series-xg7-rgb-gpu-water-block-20-series-geforce-rtx-2080-ti-reference-118-99-fs?utm_source=rss&utm_content=def&utm_medium=RSS2
+        - row "RTX 3060 12GB GDDR6 Ampere 170W dual CAD $380.00 Pre-Owned —" [ref=e110] [cursor=pointer]:
+          - cell "RTX 3060" [ref=e111]: RTX 3060
+          - cell "12GB GDDR6" [ref=e113]:
+            - text: 12GB
+            - generic [ref=e114]: GDDR6
+          - cell "Ampere" [ref=e115]
+          - cell "170W" [ref=e116]
+          - cell "dual" [ref=e117]
+          - cell "CAD $380.00 Pre-Owned" [ref=e118]:
+            - link "CAD $380.00" [ref=e119]:
+              - /url: https://www.ebay.ca/itm/307004725234
+            - generic [ref=e120]: Pre-Owned
+          - cell "—" [ref=e121]
+        - row "RTX 3060 Ti 8GB GDDR6 Ampere 200W dual CAD $299.00 Pre-Owned $370.00" [ref=e122] [cursor=pointer]:
+          - cell "RTX 3060 Ti" [ref=e123]: RTX 3060 Ti
+          - cell "8GB GDDR6" [ref=e125]:
+            - text: 8GB
+            - generic [ref=e126]: GDDR6
+          - cell "Ampere" [ref=e127]
+          - cell "200W" [ref=e128]
+          - cell "dual" [ref=e129]
+          - cell "CAD $299.00 Pre-Owned" [ref=e130]:
+            - link "CAD $299.00" [ref=e131]:
+              - /url: https://www.ebay.ca/itm/306290025494
+            - generic [ref=e132]: Pre-Owned
+          - cell "$370.00" [ref=e133]:
+            - link "$370.00" [ref=e134]:
+              - /url: https://gpu.userbenchmark.com/
+        - row "RTX 3080 10GB GDDR6X Ampere 320W dual CAD $349.57 Pre-Owned $699.00" [ref=e135] [cursor=pointer]:
+          - cell "RTX 3080" [ref=e136]: RTX 3080
+          - cell "10GB GDDR6X" [ref=e138]:
+            - text: 10GB
+            - generic [ref=e139]: GDDR6X
+          - cell "Ampere" [ref=e140]
+          - cell "320W" [ref=e141]
+          - cell "dual" [ref=e142]
+          - cell "CAD $349.57 Pre-Owned" [ref=e143]:
+            - link "CAD $349.57" [ref=e144]:
+              - /url: https://www.ebay.ca/itm/336630874725
+            - generic [ref=e145]: Pre-Owned
+          - cell "$699.00" [ref=e146]:
+            - link "$699.00" [ref=e147]:
+              - /url: https://wccftech.com/nvidia-geforce-rtx-3080-graphics-card-now-available-699-us-where-to-buy/
+        - row "RTX 3090 Ti 24GB GDDR6X Ampere 450W dual CAD $1,748.74 Pre-Owned $450.00" [ref=e148] [cursor=pointer]:
+          - cell "RTX 3090 Ti" [ref=e149]: RTX 3090 Ti
+          - cell "24GB GDDR6X" [ref=e151]:
+            - text: 24GB
+            - generic [ref=e152]: GDDR6X
+          - cell "Ampere" [ref=e153]
+          - cell "450W" [ref=e154]
+          - cell "dual" [ref=e155]
+          - cell "CAD $1,748.74 Pre-Owned" [ref=e156]:
+            - link "CAD $1,748.74" [ref=e157]:
+              - /url: https://www.ebay.ca/itm/366478660650
+            - generic [ref=e158]: Pre-Owned
+          - cell "$450.00" [ref=e159]:
+            - link "$450.00" [ref=e160]:
+              - /url: https://www.bestdealsusa.com/rtx-3090-ti-graphics-card
+        - row "RTX 4000 SFF 20GB GDDR6 Ada Lovelace 70W — CAD $2,161.38 Brand New —" [ref=e161] [cursor=pointer]:
+          - cell "RTX 4000 SFF" [ref=e162]: RTX 4000 SFF
+          - cell "20GB GDDR6" [ref=e164]:
+            - text: 20GB
+            - generic [ref=e165]: GDDR6
+          - cell "Ada Lovelace" [ref=e166]
+          - cell "70W" [ref=e167]
+          - cell "—" [ref=e168]
+          - cell "CAD $2,161.38 Brand New" [ref=e169]:
+            - link "CAD $2,161.38" [ref=e170]:
+              - /url: https://www.ebay.ca/itm/167951712810
+            - generic [ref=e171]: Brand New
+          - cell "—" [ref=e172]
+        - 'row "RTX 4060 TiNotes: undervolted 8GB GDDR6 Ada Lovelace 165W dual CAD $404.31 Pre-Owned $299.00" [ref=e173] [cursor=pointer]':
+          - 'cell "RTX 4060 TiNotes: undervolted" [ref=e174]': RTX 4060 Tiⓘ
+          - cell "8GB GDDR6" [ref=e176]:
+            - text: 8GB
+            - generic [ref=e177]: GDDR6
+          - cell "Ada Lovelace" [ref=e178]
+          - cell "165W" [ref=e179]
+          - cell "dual" [ref=e180]
+          - cell "CAD $404.31 Pre-Owned" [ref=e181]:
+            - link "CAD $404.31" [ref=e182]:
+              - /url: https://www.ebay.ca/itm/158002914566
+            - generic [ref=e183]: Pre-Owned
+          - cell "$299.00" [ref=e184]:
+            - link "$299.00" [ref=e185]:
+              - /url: https://www.ghacks.net/2023/05/21/nvidia-geforce-rtx-4060-and-rtx-4060-ti-unveiled-starting-at-299/
+        - row "RTX 4070 12GB GDDR6X Ada Lovelace 200W dual CAD $629.54 Pre-Owned $599.00" [ref=e186] [cursor=pointer]:
+          - cell "RTX 4070" [ref=e187]: RTX 4070
+          - cell "12GB GDDR6X" [ref=e189]:
+            - text: 12GB
+            - generic [ref=e190]: GDDR6X
+          - cell "Ada Lovelace" [ref=e191]
+          - cell "200W" [ref=e192]
+          - cell "dual" [ref=e193]
+          - cell "CAD $629.54 Pre-Owned" [ref=e194]:
+            - link "CAD $629.54" [ref=e195]:
+              - /url: https://www.ebay.ca/itm/358684145414
+            - generic [ref=e196]: Pre-Owned
+          - cell "$599.00" [ref=e197]:
+            - link "$599.00" [ref=e198]:
+              - /url: https://wccftech.com/nvidia-geforce-rtx-4070-graphics-card-now-available-599-usd-heres-where-to-buy-it/
+        - row "RTX 4070 Super 12GB GDDR6X Ada Lovelace 250W dual CAD $769.45 Pre-Owned $599.00" [ref=e199] [cursor=pointer]:
+          - cell "RTX 4070 Super" [ref=e200]: RTX 4070 Super
+          - cell "12GB GDDR6X" [ref=e202]:
+            - text: 12GB
+            - generic [ref=e203]: GDDR6X
+          - cell "Ada Lovelace" [ref=e204]
+          - cell "250W" [ref=e205]
+          - cell "dual" [ref=e206]
+          - cell "CAD $769.45 Pre-Owned" [ref=e207]:
+            - link "CAD $769.45" [ref=e208]:
+              - /url: https://www.ebay.ca/itm/206250418812
+            - generic [ref=e209]: Pre-Owned
+          - cell "$599.00" [ref=e210]:
+            - link "$599.00" [ref=e211]:
+              - /url: https://www.dexerto.com/tech/nvidia-rtx-4070-super-leaked-specs-price-more-2369539/
+        - row "RTX 4090 24GB GDDR6X Ada Lovelace 450W dual CAD $3,270.06 Pre-Owned $1,599.99" [ref=e212] [cursor=pointer]:
+          - cell "RTX 4090" [ref=e213]: RTX 4090
+          - cell "24GB GDDR6X" [ref=e215]:
+            - text: 24GB
+            - generic [ref=e216]: GDDR6X
+          - cell "Ada Lovelace" [ref=e217]
+          - cell "450W" [ref=e218]
+          - cell "dual" [ref=e219]
+          - cell "CAD $3,270.06 Pre-Owned" [ref=e220]:
+            - link "CAD $3,270.06" [ref=e221]:
+              - /url: https://www.ebay.ca/itm/336601853408
+            - generic [ref=e222]: Pre-Owned
+          - cell "$1,599.99" [ref=e223]:
+            - link "$1,599.99" [ref=e224]:
+              - /url: https://www.facebook.com/groups/372119787729533/posts/1121592366115601/
+        - row "RTX 5060 Ti (8GB) 8GB GDDR7 Blackwell 180W dual CAD $500.00 Open Box $310.00" [ref=e225] [cursor=pointer]:
+          - cell "RTX 5060 Ti (8GB)" [ref=e226]: RTX 5060 Ti (8GB)
+          - cell "8GB GDDR7" [ref=e228]:
+            - text: 8GB
+            - generic [ref=e229]: GDDR7
+          - cell "Blackwell" [ref=e230]
+          - cell "180W" [ref=e231]
+          - cell "dual" [ref=e232]
+          - cell "CAD $500.00 Open Box" [ref=e233]:
+            - link "CAD $500.00" [ref=e234]:
+              - /url: https://www.ebay.ca/itm/147109581207
+            - generic [ref=e235]: Open Box
+          - cell "$310.00" [ref=e236]:
+            - link "$310.00" [ref=e237]:
+              - /url: https://slickdeals.net/f/19589628-msi-ventus-geforce-rtx-5060-ti-8gb-007-steam-game-310-ar?utm_source=rss&utm_content=def&utm_medium=RSS2
+        - row "RTX 5060 Ti (Galax) 16GB GDDR7 Blackwell 180W single CAD $1,246.89 New (Other) $310.00" [ref=e238] [cursor=pointer]:
+          - cell "RTX 5060 Ti (Galax)" [ref=e239]: RTX 5060 Ti (Galax)
+          - cell "16GB GDDR7" [ref=e241]:
+            - text: 16GB
+            - generic [ref=e242]: GDDR7
+          - cell "Blackwell" [ref=e243]
+          - cell "180W" [ref=e244]
+          - cell "single" [ref=e245]
+          - cell "CAD $1,246.89 New (Other)" [ref=e246]:
+            - link "CAD $1,246.89" [ref=e247]:
+              - /url: https://www.ebay.ca/itm/286948899795
+            - generic [ref=e248]: New (Other)
+          - cell "$310.00" [ref=e249]:
+            - link "$310.00" [ref=e250]:
+              - /url: https://slickdeals.net/f/19589628-msi-ventus-geforce-rtx-5060-ti-8gb-007-steam-game-310-ar?utm_source=rss&utm_content=def&utm_medium=RSS2
+        - row "RTX 5070 12GB GDDR7 Blackwell 250W dual CAD $769.44 Pre-Owned $500.00" [ref=e251] [cursor=pointer]:
+          - cell "RTX 5070" [ref=e252]: RTX 5070
+          - cell "12GB GDDR7" [ref=e254]:
+            - text: 12GB
+            - generic [ref=e255]: GDDR7
+          - cell "Blackwell" [ref=e256]
+          - cell "250W" [ref=e257]
+          - cell "dual" [ref=e258]
+          - cell "CAD $769.44 Pre-Owned" [ref=e259]:
+            - link "CAD $769.44" [ref=e260]:
+              - /url: https://www.ebay.ca/itm/188498782689
+            - generic [ref=e261]: Pre-Owned
+          - cell "$500.00" [ref=e262]:
+            - link "$500.00" [ref=e263]:
+              - /url: https://slickdeals.net/f/19607796-select-best-buy-stores-pny-geforce-rtx-5070-ti-16gb-oc-gddr7-graphics-card-500?utm_source=rss&utm_content=def&utm_medium=RSS2
+        - row "RTX 5070 ti 16GB GDDR7 Blackwell 300W dual CAD $1,133.88 Pre-Owned $500.00" [ref=e264] [cursor=pointer]:
+          - cell "RTX 5070 ti" [ref=e265]: RTX 5070 ti
+          - cell "16GB GDDR7" [ref=e267]:
+            - text: 16GB
+            - generic [ref=e268]: GDDR7
+          - cell "Blackwell" [ref=e269]
+          - cell "300W" [ref=e270]
+          - cell "dual" [ref=e271]
+          - cell "CAD $1,133.88 Pre-Owned" [ref=e272]:
+            - link "CAD $1,133.88" [ref=e273]:
+              - /url: https://www.ebay.ca/itm/157975846608
+            - generic [ref=e274]: Pre-Owned
+          - cell "$500.00" [ref=e275]:
+            - link "$500.00" [ref=e276]:
+              - /url: https://slickdeals.net/f/19607796-select-best-buy-stores-pny-geforce-rtx-5070-ti-16gb-oc-gddr7-graphics-card-500?utm_source=rss&utm_content=def&utm_medium=RSS2
+        - row "RTX 5080 16GB GDDR7 Blackwell 360W dual CAD $1,665.59 Excellent - Refurbished $979.99" [ref=e277] [cursor=pointer]:
+          - cell "RTX 5080" [ref=e278]: RTX 5080
+          - cell "16GB GDDR7" [ref=e280]:
+            - text: 16GB
+            - generic [ref=e281]: GDDR7
+          - cell "Blackwell" [ref=e282]
+          - cell "360W" [ref=e283]
+          - cell "dual" [ref=e284]
+          - cell "CAD $1,665.59 Excellent - Refurbished" [ref=e285]:
+            - link "CAD $1,665.59" [ref=e286]:
+              - /url: https://www.ebay.ca/itm/336639526139
+            - generic [ref=e287]: Excellent - Refurbished
+          - cell "$979.99" [ref=e288]:
+            - link "$979.99" [ref=e289]:
+              - /url: https://slickdeals.net/f/19604484-ymmv-msi-gaming-rtx-5080-16g-inspire-3x-oc-black-graphics-card-16gb-gddr7-256-bit-extreme-clock-2655-mhz-displayport-x-3-2-1a-hdmi-2-1b-for-979-99?utm_source=rss&utm_content=def&utm_medium=RSS2
+        - row "RTX 5090 32GB GDDR7 Blackwell 575W dual CAD $4,633.20 Brand New $2,999.00" [ref=e290] [cursor=pointer]:
+          - cell "RTX 5090" [ref=e291]: RTX 5090
+          - cell "32GB GDDR7" [ref=e293]:
+            - text: 32GB
+            - generic [ref=e294]: GDDR7
+          - cell "Blackwell" [ref=e295]
+          - cell "575W" [ref=e296]
+          - cell "dual" [ref=e297]
+          - cell "CAD $4,633.20 Brand New" [ref=e298]:
+            - link "CAD $4,633.20" [ref=e299]:
+              - /url: https://www.ebay.ca/itm/389296144125
+            - generic [ref=e300]: Brand New
+          - cell "$2,999.00" [ref=e301]:
+            - link "$2,999.00" [ref=e302]:
+              - /url: https://slickdeals.net/f/19496511-lenovo-legion-pro-7i-16-2-5k-240hz-oled-intel-ultra-9-275hx-rtx-5090-32gb-ddr5-1tb-ssd-2999?utm_source=rss&utm_content=def&utm_medium=RSS2
+        - row "RTX A2000 (12GB) 12GB GDDR6 Ampere 70W — CAD $629.51 Pre-Owned $383.00" [ref=e303] [cursor=pointer]:
+          - cell "RTX A2000 (12GB)" [ref=e304]: RTX A2000 (12GB)
+          - cell "12GB GDDR6" [ref=e306]:
+            - text: 12GB
+            - generic [ref=e307]: GDDR6
+          - cell "Ampere" [ref=e308]
+          - cell "70W" [ref=e309]
+          - cell "—" [ref=e310]
+          - cell "CAD $629.51 Pre-Owned" [ref=e311]:
+            - link "CAD $629.51" [ref=e312]:
+              - /url: https://www.ebay.ca/itm/117223399305
+            - generic [ref=e313]: Pre-Owned
+          - cell "$383.00" [ref=e314]:
+            - link "$383.00" [ref=e315]:
+              - /url: https://www.monitors.com/en-ca/products/nvidia-rtx-a2000-12gb-graphics-card?srsltid=AfmBOooyGmvms9gAitN7a-h_YQ4ZOrYiR2Bt-enmrJgqByN8aNOfcLRr
+        - row "RTX A2000 (6GB) 6GB GDDR6 Ampere 70W dual CAD $400.00 Pre-Owned $200.00" [ref=e316] [cursor=pointer]:
+          - cell "RTX A2000 (6GB)" [ref=e317]: RTX A2000 (6GB)
+          - cell "6GB GDDR6" [ref=e319]:
+            - text: 6GB
+            - generic [ref=e320]: GDDR6
+          - cell "Ampere" [ref=e321]
+          - cell "70W" [ref=e322]
+          - cell "dual" [ref=e323]
+          - cell "CAD $400.00 Pre-Owned" [ref=e324]:
+            - link "CAD $400.00" [ref=e325]:
+              - /url: https://www.ebay.ca/itm/287398926500
+            - generic [ref=e326]: Pre-Owned
+          - cell "$200.00" [ref=e327]:
+            - link "$200.00" [ref=e328]:
+              - /url: https://www.reddit.com/r/pcmasterrace/comments/1h23vn9/is_a_used_rtx_a2000_good_for_200/
+        - row "RTX A4000 16GB GDDR6 Ampere 140W single CAD $559.53 Pre-Owned $1,500.00" [ref=e329] [cursor=pointer]:
+          - cell "RTX A4000" [ref=e330]: RTX A4000
+          - cell "16GB GDDR6" [ref=e332]:
+            - text: 16GB
+            - generic [ref=e333]: GDDR6
+          - cell "Ampere" [ref=e334]
+          - cell "140W" [ref=e335]
+          - cell "single" [ref=e336]
+          - cell "CAD $559.53 Pre-Owned" [ref=e337]:
+            - link "CAD $559.53" [ref=e338]:
+              - /url: https://www.ebay.ca/itm/147339222096
+            - generic [ref=e339]: Pre-Owned
+          - cell "$1,500.00" [ref=e340]:
+            - link "$1,500.00" [ref=e341]:
+              - /url: https://slickdeals.net/f/15370360-nvidia-rtx-a4000-16gb-dp-4-graphics-card-lenovo-us-1500?utm_source=rss&utm_content=def&utm_medium=RSS2
+        - row "RTX A4500 20GB GDDR6 Ampere 200W — CAD $1,259.09 Pre-Owned $4,279.00" [ref=e342] [cursor=pointer]:
+          - cell "RTX A4500" [ref=e343]: RTX A4500
+          - cell "20GB GDDR6" [ref=e345]:
+            - text: 20GB
+            - generic [ref=e346]: GDDR6
+          - cell "Ampere" [ref=e347]
+          - cell "200W" [ref=e348]
+          - cell "—" [ref=e349]
+          - cell "CAD $1,259.09 Pre-Owned" [ref=e350]:
+            - link "CAD $1,259.09" [ref=e351]:
+              - /url: https://www.ebay.ca/itm/298420233711
+            - generic [ref=e352]: Pre-Owned
+          - cell "$4,279.00" [ref=e353]:
+            - link "$4,279.00" [ref=e354]:
+              - /url: https://slickdeals.net/f/16555798-thinkstation-p360-tower-workstation-i9-nvidia-rtx-a4500-20gb-128gb-ddr5-ram-1tb-ssd-30fm002mus-free-shipping-4279-00-lenovo?utm_source=rss&utm_content=def&utm_medium=RSS2
+        - row "RTX A5500 24GB GDDR6 Ampere 230W — CAD $3,147.75 New (Other) —" [ref=e355] [cursor=pointer]:
+          - cell "RTX A5500" [ref=e356]: RTX A5500
+          - cell "24GB GDDR6" [ref=e358]:
+            - text: 24GB
+            - generic [ref=e359]: GDDR6
+          - cell "Ampere" [ref=e360]
+          - cell "230W" [ref=e361]
+          - cell "—" [ref=e362]
+          - cell "CAD $3,147.75 New (Other)" [ref=e363]:
+            - link "CAD $3,147.75" [ref=e364]:
+              - /url: https://www.ebay.ca/itm/116517283322
+            - generic [ref=e365]: New (Other)
+          - cell "—" [ref=e366]
+        - row "RTX PRO 2000 16GB GDDR7 Blackwell 70W dual CAD $1,187.75 Brand New $879.00" [ref=e367] [cursor=pointer]:
+          - cell "RTX PRO 2000" [ref=e368]: RTX PRO 2000
+          - cell "16GB GDDR7" [ref=e370]:
+            - text: 16GB
+            - generic [ref=e371]: GDDR7
+          - cell "Blackwell" [ref=e372]
+          - cell "70W" [ref=e373]
+          - cell "dual" [ref=e374]
+          - cell "CAD $1,187.75 Brand New" [ref=e375]:
+            - link "CAD $1,187.75" [ref=e376]:
+              - /url: https://www.ebay.ca/itm/188030264016
+            - generic [ref=e377]: Brand New
+          - cell "$879.00" [ref=e378]:
+            - link "$879.00" [ref=e379]:
+              - /url: https://versus.com/en/nvidia-geforce-rtx-3060-ti-vs-nvidia-rtx-pro-2000-blackwell
+        - row "RTX PRO 3000 12GB GDDR7 Blackwell 60W — — $1,676.00 Newegg" [ref=e380] [cursor=pointer]:
+          - cell "RTX PRO 3000" [ref=e381]: RTX PRO 3000
+          - cell "12GB GDDR7" [ref=e383]:
+            - text: 12GB
+            - generic [ref=e384]: GDDR7
+          - cell "Blackwell" [ref=e385]
+          - cell "60W" [ref=e386]
+          - cell "—" [ref=e387]
+          - cell "—" [ref=e388]
+          - cell "$1,676.00 Newegg" [ref=e389]:
+            - link "$1,676.00" [ref=e390]:
+              - /url: https://www.newegg.com/p/pl?d=rtx+3000+series
+            - generic [ref=e391]: Newegg
+        - row "RTX PRO 4000 24GB GDDR7 Blackwell 140W — CAD $2,867.88 Brand New $1,629.00 Walmart" [ref=e392] [cursor=pointer]:
+          - cell "RTX PRO 4000" [ref=e393]: RTX PRO 4000
+          - cell "24GB GDDR7" [ref=e395]:
+            - text: 24GB
+            - generic [ref=e396]: GDDR7
+          - cell "Blackwell" [ref=e397]
+          - cell "140W" [ref=e398]
+          - cell "—" [ref=e399]
+          - cell "CAD $2,867.88 Brand New" [ref=e400]:
+            - link "CAD $2,867.88" [ref=e401]:
+              - /url: https://www.ebay.ca/itm/127549012177
+            - generic [ref=e402]: Brand New
+          - cell "$1,629.00 Walmart" [ref=e403]:
+            - link "$1,629.00" [ref=e404]:
+              - /url: https://www.walmart.com/ip/PNY-NVIDIA-RTX-PRO-4000-Graphic-Card-24-GB-GDDR7-Half-height-Low-profile/17922251114
+            - generic [ref=e405]: Walmart
+        - row "RTX PRO 5000 24GB GDDR7 Blackwell 300W — CAD $4,184.41 Pre-Owned $6,599.19 Newegg" [ref=e406] [cursor=pointer]:
+          - cell "RTX PRO 5000" [ref=e407]: RTX PRO 5000
+          - cell "24GB GDDR7" [ref=e409]:
+            - text: 24GB
+            - generic [ref=e410]: GDDR7
+          - cell "Blackwell" [ref=e411]
+          - cell "300W" [ref=e412]
+          - cell "—" [ref=e413]
+          - cell "CAD $4,184.41 Pre-Owned" [ref=e414]:
+            - link "CAD $4,184.41" [ref=e415]:
+              - /url: https://www.ebay.ca/itm/398007941658
+            - generic [ref=e416]: Pre-Owned
+          - cell "$6,599.19 Newegg" [ref=e417]:
+            - link "$6,599.19" [ref=e418]:
+              - /url: https://www.newegg.com/p/pl?d=rtx+pro+5000
+            - generic [ref=e419]: Newegg
+        - row "RTX PRO 5000 (48GB) 48GB GDDR7 Blackwell 300W — CAD $8,393.93 Brand New $5,466.00 Newegg" [ref=e420] [cursor=pointer]:
+          - cell "RTX PRO 5000 (48GB)" [ref=e421]: RTX PRO 5000 (48GB)
+          - cell "48GB GDDR7" [ref=e423]:
+            - text: 48GB
+            - generic [ref=e424]: GDDR7
+          - cell "Blackwell" [ref=e425]
+          - cell "300W" [ref=e426]
+          - cell "—" [ref=e427]
+          - cell "CAD $8,393.93 Brand New" [ref=e428]:
+            - link "CAD $8,393.93" [ref=e429]:
+              - /url: https://www.ebay.ca/itm/127880013905
+            - generic [ref=e430]: Brand New
+          - cell "$5,466.00 Newegg" [ref=e431]:
+            - link "$5,466.00" [ref=e432]:
+              - /url: https://www.newegg.com/nvidia-blackwell-900-5g153-2250-000-rtx-pro-5000-48gb-graphics-card/p/N82E16814132111
+            - generic [ref=e433]: Newegg
+        - row "TITAN RTX 24GB GDDR6 Turing 280W — CAD $1,119.20 Pre-Owned —" [ref=e434] [cursor=pointer]:
+          - cell "TITAN RTX" [ref=e435]: TITAN RTX
+          - cell "24GB GDDR6" [ref=e437]:
+            - text: 24GB
+            - generic [ref=e438]: GDDR6
+          - cell "Turing" [ref=e439]
+          - cell "280W" [ref=e440]
+          - cell "—" [ref=e441]
+          - cell "CAD $1,119.20 Pre-Owned" [ref=e442]:
+            - link "CAD $1,119.20" [ref=e443]:
+              - /url: https://www.ebay.ca/itm/178212841521
+            - generic [ref=e444]: Pre-Owned
+          - cell "—" [ref=e445]

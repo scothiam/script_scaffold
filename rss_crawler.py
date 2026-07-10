@@ -10,12 +10,12 @@ Behaviour:
 Requires: feedparser
 """
 
-import hashlib
 import logging
 import re
 from datetime import datetime
 from typing import Callable
 
+from script_scaffold.source_items import upsert_source_item
 from script_scaffold.sources import Source, SourceItem
 from script_scaffold.utils import utcnow
 
@@ -112,34 +112,20 @@ class RssCrawler(BaseCrawler):
             title = (entry.get("title") or "").strip()
             summary = _entry_summary(entry)
             published_at = _parse_published(entry)
-            content_hash = hashlib.sha256(
-                (title + summary).encode("utf-8", errors="replace")
-            ).hexdigest()
 
-            existing = session.query(self._item_cls).filter_by(item_url=url).first()
-            if existing:
-                if existing.content_hash != content_hash:
-                    existing.title = title
-                    existing.summary = summary
-                    existing.content_hash = content_hash
-                    existing.published_at = published_at
-                    existing.fetched_at = utcnow()
-                    existing.is_processed = False
-                    updated_count += 1
-                else:
-                    existing.fetched_at = utcnow()
-            else:
-                session.add(self._item_cls(
-                    source_id=source.id,
-                    item_url=url,
-                    title=title,
-                    summary=summary,
-                    content_hash=content_hash,
-                    published_at=published_at,
-                    fetched_at=utcnow(),
-                    is_processed=False,
-                ))
+            outcome = upsert_source_item(
+                session,
+                self._item_cls,
+                source.id,
+                item_url=url,
+                title=title,
+                summary=summary,
+                published_at=published_at,
+            )
+            if outcome.status == "new":
                 new_count += 1
+            elif outcome.status == "updated":
+                updated_count += 1
 
         source.last_crawled_at = utcnow()
         return new_count, updated_count

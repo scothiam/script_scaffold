@@ -2,6 +2,8 @@
 
 Reusable Python building blocks for automation scripts that track, search, and store structured data. Provides database setup, ORM models, repositories, RSS crawling, web search integrations, and general utilities — all designed to be imported and extended by application code.
 
+**How backends wire these blocks:** [FLOW.md](FLOW.md). Consumer daily runs: [gpu-price-checker](../gpu-price-checker/gpu-price-checker-backend/FLOW.md), [job-hunt](../job-hunt/job-hunt-backend/FLOW.md), [ticker-snapshot](../ticker-snapshot/stock_evaluator/FLOW.md).
+
 ## Requirements
 
 ```
