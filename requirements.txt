@@ -11,5 +11,4 @@ duckduckgo-search>=5.0
 
 # Optional: LangChain provider factory (llm.py — install only what you use)
 langchain-openai>=0.1
-langchain-anthropic>=0.1
 langchain-ollama>=0.1

@@ -17,8 +17,7 @@ pip install -r requirements.txt
 | `openai>=1.0` | For AI chat calls | `ai_chat()` in `search.py` (works against any OpenAI-compatible endpoint, not just OpenAI) |
 | `tavily-python>=0.3` | For Tavily search | `tavily_search()` in `search.py` |
 | `duckduckgo-search>=5.0` | For DDG search | `ddg_search()` in `search.py` |
-| `langchain-openai>=0.1` | For LangChain + OpenAI | `get_llm()` in `llm.py` |
-| `langchain-anthropic>=0.1` | For LangChain + Anthropic | `get_llm()` in `llm.py` |
+| `langchain-openai>=0.1` | For LangChain via LiteLLM | `get_llm()` in `llm.py` (LiteLLM's endpoint is OpenAI-compatible) |
 | `langchain-ollama>=0.1` | For LangChain + Ollama | `get_llm()` in `llm.py` |
 
 Optional integrations degrade gracefully — if a package is not installed or an API key is unset, the relevant function returns an empty result or `None` instead of raising. For `llm.py`, a missing LangChain package raises `SystemExit` with an install hint rather than silently failing, since structured-output pipelines cannot continue without the provider.
@@ -215,7 +214,7 @@ results = tavily_search("widget prices Canada", max_results=5, days=30)
 
 Results have the same `{title, url, content}` shape as DDG results.
 
-#### AI chat (LiteLLM load types or direct OpenAI)
+#### AI chat (LiteLLM only)
 
 ```python
 from script_scaffold.search import ai_chat
@@ -224,15 +223,16 @@ reply = ai_chat("Summarise this in one sentence: ...", route="fast")
 json_reply = ai_chat(prompt, route="batch", json_mode=True)
 ```
 
-When `LITELLM_URL` is healthy, `route` selects a load type defined in
-`ai-dev-stack/litellm_config.yaml` (`fast`, `batch`, `standard`, `deep`, `code`, `audit`).
-Otherwise falls back to direct OpenAI with a mapped cloud model.
+`route` selects a load type defined in `ai-dev-stack/litellm_config.yaml`
+(`fast`, `batch`, `standard`, `deep`, `code`, `audit`). All calls go exclusively
+through the LiteLLM proxy — there is no direct-provider fallback. When the
+proxy is unreachable, `ai_chat` logs an error and returns `None`; it never
+falls back to a cloud API key.
 
 ```
 LITELLM_URL=http://localhost:4000
 LITELLM_MASTER_KEY=sk-local-dev-key
 AI_ROUTE_OVERRIDE=deep          # optional debug override
-OPENAI_API_KEY=sk-...           # fallback when proxy is down
 ```
 
 Legacy env vars `AI_FILTER_MODEL`, `LLM_ROUTE`, and `AI_MODEL` still work but are deprecated.
@@ -279,7 +279,7 @@ check_credentials()
 llm = get_llm(temperature=0.1, route="deep")
 llm = get_llm(temperature=0.1, route="standard")  # structured extraction
 
-apply_options(provider="anthropic", model="claude-sonnet-4-6")  # CLI override
+apply_options(provider="ollama", model="qwen3:14b")  # CLI override
 print(describe())  # "litellm  route=deep  url=http://localhost:4000/v1"
 ```
 
@@ -287,13 +287,11 @@ print(describe())  # "litellm  route=deep  url=http://localhost:4000/v1"
 
 | Variable | Purpose |
 |---|---|
-| `LLM_PROVIDER` | `litellm` (default) \| `openai` \| `anthropic` \| `ollama` |
+| `LLM_PROVIDER` | `litellm` (default, only provider that reaches cloud models) \| `ollama` (local-only) |
 | `LITELLM_URL` | LiteLLM proxy base URL (default: `http://localhost:4000`) |
 | `LITELLM_MASTER_KEY` | Proxy auth key |
 | `AI_ROUTE_OVERRIDE` | Force all routes to this load type (debug) |
 | `LLM_MODEL` | CLI `--model` override (overrides route) |
-| `OPENAI_MODEL` | OpenAI model when `LLM_PROVIDER=openai` |
-| `ANTHROPIC_MODEL` | Anthropic model when `LLM_PROVIDER=anthropic` |
 | `OLLAMA_MODEL` | Ollama model when `LLM_PROVIDER=ollama` |
 | `OLLAMA_BASE_URL` | Ollama server URL (default: `http://localhost:11434`) |
 

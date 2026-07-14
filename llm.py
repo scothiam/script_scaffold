@@ -1,10 +1,10 @@
 """LangChain provider factory for structured-output LLM pipelines.
 
 Supported providers (set via LLM_PROVIDER env var):
-  litellm    — ChatOpenAI via ai-dev-stack LiteLLM proxy (default). Load-type routes
-               (fast, batch, standard, deep, code, audit) with local + cloud fallback.
-  openai     — ChatOpenAI direct. Requires OPENAI_API_KEY.
-  anthropic  — ChatAnthropic. Requires ANTHROPIC_API_KEY.
+  litellm    — ChatOpenAI via ai-dev-stack LiteLLM proxy (default, and the only
+               provider that reaches cloud models). Load-type routes (fast, batch,
+               standard, deep, code, audit); the proxy itself handles local vs.
+               cloud fallback server-side. No API keys are read by this module.
   ollama     — ChatOllama pointed at a local/remote Ollama server. No API key needed.
 
 Route selection:
@@ -24,8 +24,6 @@ Usage::
 
 import os
 
-OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
-ANTHROPIC_DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 OLLAMA_DEFAULT_MODEL = "qwen3:14b"
 OLLAMA_DEFAULT_URL = "http://localhost:11434"
 LITELLM_DEFAULT_ROUTE = "deep"
@@ -44,22 +42,15 @@ def check_credentials() -> None:
 
         if resolve_ai_config() is None:
             raise SystemExit(
-                "No AI backend available. Start ai-dev-stack LiteLLM (bash start.sh), "
-                "set OPENAI_API_KEY for direct fallback, or set LLM_PROVIDER=openai/ollama."
+                "LiteLLM proxy is unavailable. Start it with 'bash start.sh' in "
+                "ai-dev-stack, or set LLM_PROVIDER=ollama for a local-only run."
             )
         return
     if provider == "ollama":
         return
-    if provider == "anthropic" and not os.getenv("ANTHROPIC_API_KEY"):
-        raise SystemExit(
-            "ANTHROPIC_API_KEY is not set. Add it to your .env file or "
-            "set LLM_PROVIDER=openai/ollama."
-        )
-    if provider == "openai" and not os.getenv("OPENAI_API_KEY"):
-        raise SystemExit(
-            "OPENAI_API_KEY is not set. Add it to your .env file or "
-            "set LLM_PROVIDER=anthropic/ollama."
-        )
+    raise SystemExit(
+        f"Unknown LLM_PROVIDER {provider!r}. Valid options: litellm, ollama."
+    )
 
 
 def _resolve_model(provider: str, route: str | None) -> str:
@@ -69,18 +60,11 @@ def _resolve_model(provider: str, route: str | None) -> str:
         return cli_override
 
     if provider == "litellm":
-        from script_scaffold.search import resolve_route, route_to_model, resolve_ai_config
+        from script_scaffold.search import resolve_route
 
-        config = resolve_ai_config()
-        via_litellm = config is not None and config[1] is not None
-        resolved = resolve_route(route, default=LITELLM_DEFAULT_ROUTE)
-        return route_to_model(resolved, via_litellm=via_litellm)
+        return resolve_route(route, default=LITELLM_DEFAULT_ROUTE)
 
-    if provider == "anthropic":
-        return os.getenv("ANTHROPIC_MODEL", ANTHROPIC_DEFAULT_MODEL)
-    if provider == "ollama":
-        return os.getenv("OLLAMA_MODEL", OLLAMA_DEFAULT_MODEL)
-    return os.getenv("OPENAI_MODEL", OPENAI_DEFAULT_MODEL)
+    return os.getenv("OLLAMA_MODEL", OLLAMA_DEFAULT_MODEL)
 
 
 def get_llm(temperature: float = 0.1, route: str | None = None):
@@ -97,7 +81,8 @@ def get_llm(temperature: float = 0.1, route: str | None = None):
         config = resolve_ai_config()
         if config is None:
             raise SystemExit(
-                "No AI backend available. Start ai-dev-stack LiteLLM or set OPENAI_API_KEY."
+                "LiteLLM proxy is unavailable. Start it with 'bash start.sh' in "
+                "ai-dev-stack, or set LLM_PROVIDER=ollama for a local-only run."
             )
         api_key, base_url = config
         try:
@@ -113,15 +98,6 @@ def get_llm(temperature: float = 0.1, route: str | None = None):
             temperature=temperature,
         )
 
-    if provider == "anthropic":
-        try:
-            from langchain_anthropic import ChatAnthropic  # noqa: PLC0415
-        except ImportError:
-            raise SystemExit(
-                "langchain-anthropic is not installed. Run: pip install langchain-anthropic"
-            )
-        return ChatAnthropic(model=model, temperature=temperature)
-
     if provider == "ollama":
         try:
             from langchain_ollama import ChatOllama  # noqa: PLC0415
@@ -132,17 +108,8 @@ def get_llm(temperature: float = 0.1, route: str | None = None):
         base_url = os.getenv("OLLAMA_BASE_URL", OLLAMA_DEFAULT_URL)
         return ChatOllama(model=model, base_url=base_url, temperature=temperature)
 
-    if provider == "openai":
-        try:
-            from langchain_openai import ChatOpenAI  # noqa: PLC0415
-        except ImportError:
-            raise SystemExit(
-                "langchain-openai is not installed. Run: pip install langchain-openai"
-            )
-        return ChatOpenAI(model=model, temperature=temperature)
-
     raise SystemExit(
-        f"Unknown LLM_PROVIDER {provider!r}. Valid options: litellm, openai, anthropic, ollama."
+        f"Unknown LLM_PROVIDER {provider!r}. Valid options: litellm, ollama."
     )
 
 
@@ -164,7 +131,7 @@ def describe() -> str:
         config = resolve_ai_config()
         if config:
             _, base_url = config
-            return f"litellm  route={model}  url={base_url or 'openai-direct'}"
+            return f"litellm  route={model}  url={base_url}"
         return "litellm  (no backend available)"
     if provider == "ollama":
         url = os.getenv("OLLAMA_BASE_URL", OLLAMA_DEFAULT_URL)

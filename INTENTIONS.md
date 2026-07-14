@@ -164,13 +164,15 @@ plan limit on every subsequent call.
 **`ai_chat` / `resolve_ai_config`**
 Intention: a single-turn "ask an LLM one question, get one string back" helper for use
 cases too simple to justify LangChain (`llm.py`) — e.g. a one-off summarization or
-classification inside a script. When `AI_BASE_URL` is unset, prefers the ai-dev-stack
-LiteLLM proxy (load types: `fast`, `batch`, `standard`, `deep`, `code`, `audit` — local
-pools with cloud fallback), then direct OpenAI via `OPENAI_API_KEY` or legacy `AI_API_KEY`.
-Callers pass `route=` to select the load type; legacy `AI_FILTER_MODEL` / `LLM_ROUTE` env
-vars still map to routes. Set `AI_BASE_URL` explicitly to target any other OpenAI-compatible endpoint. Same fail-soft contract as the search
-functions: no credentials or permanent auth/quota error returns `None` and disables
-itself for the run, rather than crashing the calling script.
+classification inside a script. Routes exclusively through the ai-dev-stack LiteLLM
+proxy (load types: `fast`, `batch`, `standard`, `deep`, `code`, `audit` — the proxy
+itself owns local-vs-cloud fallback server-side; this module never talks to a
+provider directly and reads no provider API key). Callers pass `route=` to select
+the load type; legacy `AI_FILTER_MODEL` / `LLM_ROUTE` / `AI_MODEL` env vars still
+map to routes. Same fail-soft contract as the search functions in one respect —
+an unreachable proxy returns `None` and disables `ai_chat` for the run rather than
+crashing the calling script — but unlike the old behavior, that failure is logged
+loudly (`logger.error`) and never silently substitutes a direct cloud call.
 
 ---
 
@@ -195,14 +197,16 @@ maintenance.
 **`get_llm` / `check_credentials` / `apply_options` / `describe`**
 Intention: for the opposite use case from `search.py`'s chat helpers — pipelines that need
 `.with_structured_output(Schema)` to get a typed/validated object back from the LLM rather
-than a string. When `LLM_PROVIDER=litellm` (default), callers pass `route=` to select a
-load type; provider choice remains a single env var so a project can switch
-openai/anthropic/ollama without code changes, including in deployed/scheduled contexts
-where flags aren't convenient. Unlike `search.py`, a missing package or credential here
-raises `SystemExit` rather than degrading gracefully — the intention is that a structured
--output pipeline genuinely cannot produce a meaningful result without its LLM, so failing
-fast at startup (ideally via an explicit `check_credentials()` call before a long pipeline
-begins) is preferable to failing deep inside a multi-step run.
+than a string. When `LLM_PROVIDER=litellm` (default, and the only provider that reaches
+cloud models), callers pass `route=` to select a load type. `LLM_PROVIDER=ollama` remains
+as a single-env-var local-only escape hatch for deployed/scheduled contexts where flags
+aren't convenient; there is no `openai`/`anthropic` direct-provider option — every cloud
+call goes through LiteLLM, full stop. Unlike `search.py`, a missing package or an
+unreachable proxy here raises `SystemExit` rather than degrading gracefully — the
+intention is that a structured-output pipeline genuinely cannot produce a meaningful
+result without its LLM, so failing fast at startup (ideally via an explicit
+`check_credentials()` call before a long pipeline begins) is preferable to failing deep
+inside a multi-step run.
 
 ---
 
