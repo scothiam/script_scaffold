@@ -9,6 +9,12 @@ openai>=1.0
 tavily-python>=0.3
 duckduckgo-search>=5.0
 
+# Note: argus_search.py (Argus multi-provider search broker) needs no pip
+# dependency here — it's a pure stdlib HTTP client against a running
+# `argus serve` instance (installed globally via `uv tool install
+# argus-search`, started by ai-dev-stack/start_argus.sh). Fallback switch
+# back to Tavily+DDG via SEARCH_PROVIDER, see argus_search.py.
+
 # Optional: LangChain provider factory (llm.py — install only what you use)
 langchain-openai>=0.1
 langchain-ollama>=0.1
