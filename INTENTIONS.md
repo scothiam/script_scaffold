@@ -176,6 +176,23 @@ loudly (`logger.error`) and never silently substitutes a direct cloud call.
 
 ---
 
+## argus_search.py — provider-switchable web search
+
+**`web_search` / `web_search_detailed` / `ArgusSearch`**
+Intention: add a third search backend (the Argus multi-provider broker) *without* touching
+`search.py`, and let any caller move between "Tavily + DDG merge" and "Argus" with a
+single env var and zero code change — including reverting. `SEARCH_PROVIDER=argus` routes
+through a long-lived `argus serve` process (chosen over the Argus CLI specifically because
+only the server keeps its query cache alive across calls, so the 7-day cache spans
+separate `daily.sh` runs); anything else uses `merge_web_search_detailed`. Same fail-soft
+contract as the rest of `search.py`: an unreachable, slow, or empty Argus instance returns
+`[]` and the wrapper falls back to Tavily + DDG rather than raising. This module is the
+one every consumer backend now imports for web search; `search.py`'s `ddg_search` /
+`tavily_search` / `merge_web_search` stay as the underlying primitives and the revert
+target.
+
+---
+
 ## ai_gates.py — fast per-item AI filter gates
 
 **`GateResult` / `FastAiGate`**

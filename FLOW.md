@@ -20,6 +20,7 @@ flowchart LR
     crawl[RssCrawler / crawl_sources]
     ddg[DdgSearch]
     tavily[TavilySearch]
+    argus["argus_search.web_search<br/>(SEARCH_PROVIDER switch)"]
     gate[FastAiGate]
     llm[get_llm]
   end
@@ -34,20 +35,21 @@ flowchart LR
   repo --> gpu
   crawl --> gpu
   crawl --> stock
-  ddg --> gpu
-  tavily --> gpu
-  ddg --> job
-  tavily --> job
+  ddg --> argus
+  tavily --> argus
+  argus --> gpu
+  argus --> job
+  argus --> stock
   gate --> job
   llm --> stock
 ```
 
 | Backend | Primary scaffold usage |
 |---------|------------------------|
-| [gpu-price-checker](../gpu-price-checker/gpu-price-checker-backend/FLOW.md) | `session_scope`, `SourceRepository`, `RssCrawler`, `DdgSearch`/`TavilySearch`, `utcnow` |
-| [job-hunt](../job-hunt/job-hunt-backend/FLOW.md) | `search_web` helpers, `FastAiGate` pattern in `job_ai_gates`, DB sessions |
-| [ticker-snapshot](../ticker-snapshot/stock_evaluator/FLOW.md) | RSS crawl, `get_llm`, search for source discovery |
-| [price-checker](../price-checker/FLOW.md) | Re-exports search ABCs; `RetailPriceSearch` uses `DdgSearch`, `TavilySearch`, `SourceRepository` |
+| [gpu-price-checker](../gpu-price-checker/gpu-price-checker-backend/FLOW.md) | `session_scope`, `SourceRepository`, `RssCrawler`, `argus_search.web_search` (over `DdgSearch`/`TavilySearch`), `utcnow` |
+| [job-hunt](../job-hunt/job-hunt-backend/FLOW.md) | `argus_search.web_search` helpers, `FastAiGate` pattern in `job_ai_gates`, DB sessions |
+| [ticker-snapshot](../ticker-snapshot/stock_evaluator/FLOW.md) | RSS crawl, `get_llm`, `argus_search.web_search` for source discovery |
+| [price-checker](../price-checker/FLOW.md) | Re-exports search ABCs; `RetailPriceSearch` searches via `argus_search.web_search` (Tavily/DDG under it), `SourceRepository` |
 
 ---
 
@@ -77,7 +79,9 @@ GPU: `gpu_sources.crawl_sources_for_gpu_run`. Stock evaluator: `source_crawler.c
 
 `DdgSearch` and `TavilySearch` implement `BaseSearch.search` with graceful empty results when keys or packages are missing. `search.py` also exposes `ai_chat` for one-shot fast LLM calls (used by gates and validators).
 
-**In the code:** `search.DdgSearch`, `search.TavilySearch`, `search.ai_chat`, `search.BaseSearch`
+Consumer backends call web search through `argus_search.web_search` / `web_search_detailed`, which wrap the Tavily + DDG merge by default and route through an Argus broker when `SEARCH_PROVIDER=argus` (with automatic fallback to Tavily + DDG). It is a pure `.env` switch — no code change to enable or revert.
+
+**In the code:** `argus_search.web_search`, `search.DdgSearch`, `search.TavilySearch`, `search.merge_web_search`, `search.ai_chat`, `search.BaseSearch`
 
 ---
 

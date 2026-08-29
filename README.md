@@ -239,6 +239,28 @@ Legacy env vars `AI_FILTER_MODEL`, `LLM_ROUTE`, and `AI_MODEL` still work but ar
 
 ---
 
+### `argus_search.py` — provider-switchable web search
+
+Additive layer over `search.py` (it does not modify it). `web_search()` /
+`web_search_detailed()` are drop-in replacements for the `merge_web_search` helpers:
+
+```python
+from script_scaffold.argus_search import web_search
+
+results = web_search("widget prices Canada", max_results=5)
+```
+
+By default (or with `SEARCH_PROVIDER` unset / any value other than `argus`) these call
+the original Tavily + DDG merge. Set `SEARCH_PROVIDER=argus` in `.env` to route through a
+running [Argus](https://github.com/Khamel83/argus) broker (`argus serve`, started by
+`ai-dev-stack/start_argus.sh` at `ARGUS_URL`, default `http://localhost:8000`). Argus
+fails soft exactly like `DdgSearch` / `TavilySearch` — an unreachable or empty broker
+falls back to Tavily + DDG automatically. Reverting is a one-line `.env` change, no code
+edits. All four `script_scaffold` consumers (`job-hunt`, `gpu-price-checker`,
+`ticker-snapshot`, and `price-checker` transitively) call web search through this module.
+
+---
+
 ### `ai_gates.py` — fast per-item AI filter gates
 
 For pipelines that classify one search result at a time (keep vs reject) using
