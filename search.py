@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 _tavily_disabled = False
 _ai_disabled = False
 
-LITELLM_DEFAULT_URL = "http://192.168.0.121:4000"
+LITELLM_DEFAULT_URL = "http://localhost:4000"
 LITELLM_DEFAULT_KEY = "sk-local-dev-key"
 
 # LiteLLM load-type route names (see ai-dev-stack/litellm_config.yaml).

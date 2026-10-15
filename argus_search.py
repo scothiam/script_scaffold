@@ -42,7 +42,7 @@ from script_scaffold.search import (
 
 logger = logging.getLogger(__name__)
 
-ARGUS_DEFAULT_URL = "http://192.168.0.121:8000"
+ARGUS_DEFAULT_URL = "http://localhost:8000"
 _ARGUS_TIMEOUT = float(os.getenv("ARGUS_TIMEOUT", "30"))
 
 
@@ -119,7 +119,8 @@ def web_search(
 
     Set SEARCH_PROVIDER=argus to route through Argus instead (requires
     `argus serve` running and reachable at ARGUS_URL, default
-    http://192.168.0.121:8000, the opi16 hub's container — see ai-dev-stack/agent/FLOW.md). If Argus
+    http://localhost:8000 — set ARGUS_URL in your own .env to point at a
+    remote Argus instance; see ai-dev-stack/agent/FLOW.md). If Argus
     returns no results for a given call, this falls back to the original
     merge automatically for that call. To fully revert to the original
     behavior, just unset SEARCH_PROVIDER — no code changes needed at any
