@@ -341,22 +341,29 @@ def resolve_route(route: str | None = None, *, default: str = "fast") -> str:
     """Resolve a LiteLLM load-type route name for the current request.
 
     Priority: AI_ROUTE_OVERRIDE → explicit route arg → legacy env vars
-    (AI_FILTER_MODEL, LLM_ROUTE, AI_MODEL) → default.
+    (AI_FILTER_MODEL, LLM_ROUTE, AI_MODEL) → default. AI_ROUTE_SUFFIX, if
+    set, is appended to whichever name wins (e.g. "fast" -> "fast-cloud") —
+    used by daily.sh's --cloud-ai to send batch runs to the dedicated
+    cloud-only *-cloud routes without changing anything for interactive
+    callers that leave it unset. A caller passing model= to ai_chat()
+    bypasses this entirely, same as it bypasses AI_ROUTE_OVERRIDE.
     """
     override = os.getenv("AI_ROUTE_OVERRIDE", "").strip()
     if override:
-        return _LEGACY_ROUTE_ALIASES.get(override, override)
+        base = _LEGACY_ROUTE_ALIASES.get(override, override)
+    elif route:
+        base = _LEGACY_ROUTE_ALIASES.get(route, route)
+    else:
+        base = default
+        for env_name in ("AI_FILTER_MODEL", "LLM_ROUTE", "AI_MODEL"):
+            legacy = os.getenv(env_name, "").strip()
+            if legacy:
+                logger.debug("Using deprecated %s=%r — set route= at call site instead", env_name, legacy)
+                base = _LEGACY_ROUTE_ALIASES.get(legacy, legacy)
+                break
 
-    if route:
-        return _LEGACY_ROUTE_ALIASES.get(route, route)
-
-    for env_name in ("AI_FILTER_MODEL", "LLM_ROUTE", "AI_MODEL"):
-        legacy = os.getenv(env_name, "").strip()
-        if legacy:
-            logger.debug("Using deprecated %s=%r — set route= at call site instead", env_name, legacy)
-            return _LEGACY_ROUTE_ALIASES.get(legacy, legacy)
-
-    return default
+    suffix = os.getenv("AI_ROUTE_SUFFIX", "").strip()
+    return f"{base}{suffix}" if suffix else base
 
 
 def resolve_ai_config() -> tuple[str, str] | None:
