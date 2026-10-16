@@ -11,7 +11,6 @@ _tavily_disabled = False
 _ai_disabled = False
 
 LITELLM_DEFAULT_URL = "http://localhost:4000"
-LITELLM_DEFAULT_KEY = "sk-local-dev-key"
 
 # LiteLLM load-type route names (see ai-dev-stack/litellm_config.yaml).
 AI_LOAD_TYPES = frozenset({"tiny", "fast", "batch", "standard", "deep", "code", "audit"})
@@ -324,7 +323,10 @@ def merge_web_search_detailed(
 # ---------------------------------------------------------------------------
 
 def _litellm_healthy(url: str) -> bool:
-    master_key = os.getenv("LITELLM_MASTER_KEY", LITELLM_DEFAULT_KEY)
+    # No built-in key: it comes from the environment (ai-dev-stack/.env, exported by daily.sh / start-report.sh).
+    master_key = os.getenv("LITELLM_MASTER_KEY", "")
+    if not master_key:
+        logger.warning("LITELLM_MASTER_KEY is not set: the LiteLLM proxy will refuse requests")
     request = urllib.request.Request(
         f"{url.rstrip('/')}/v1/models",
         headers={"Authorization": f"Bearer {master_key}"},
@@ -389,7 +391,7 @@ def resolve_ai_config() -> tuple[str, str] | None:
         return None
 
     config = (
-        os.getenv("LITELLM_MASTER_KEY", LITELLM_DEFAULT_KEY),
+        os.getenv("LITELLM_MASTER_KEY", ""),
         f"{litellm_url.rstrip('/')}/v1",
     )
     logger.debug("AI routing via LiteLLM proxy at %s", litellm_url)

@@ -231,7 +231,7 @@ falls back to a cloud API key.
 
 ```
 LITELLM_URL=http://localhost:4000
-LITELLM_MASTER_KEY=sk-local-dev-key
+LITELLM_MASTER_KEY=sk-change-me   # the proxy key, from ai-dev-stack/.env
 AI_ROUTE_OVERRIDE=deep          # optional debug override
 ```
 
